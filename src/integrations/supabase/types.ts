@@ -51,6 +51,8 @@ export type Database = {
       }
       listings: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           brand: string | null
           category: string
           condition: string
@@ -58,8 +60,10 @@ export type Database = {
           description: string | null
           id: string
           images: string[] | null
+          is_approved: boolean | null
           is_featured: boolean | null
           price: number
+          rejection_reason: string | null
           seller_id: string
           size: string
           status: string | null
@@ -68,6 +72,8 @@ export type Database = {
           views_count: number | null
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           brand?: string | null
           category: string
           condition: string
@@ -75,8 +81,10 @@ export type Database = {
           description?: string | null
           id?: string
           images?: string[] | null
+          is_approved?: boolean | null
           is_featured?: boolean | null
           price: number
+          rejection_reason?: string | null
           seller_id: string
           size: string
           status?: string | null
@@ -85,6 +93,8 @@ export type Database = {
           views_count?: number | null
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           brand?: string | null
           category?: string
           condition?: string
@@ -92,8 +102,10 @@ export type Database = {
           description?: string | null
           id?: string
           images?: string[] | null
+          is_approved?: boolean | null
           is_featured?: boolean | null
           price?: number
+          rejection_reason?: string | null
           seller_id?: string
           size?: string
           status?: string | null
@@ -307,6 +319,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_usage: {
         Row: {
           created_at: string
@@ -373,8 +406,17 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: number
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
+      app_role: "admin" | "moderator" | "user"
       pass_type:
         | "free"
         | "buyer_starter"
@@ -510,6 +552,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderator", "user"],
       pass_type: [
         "free",
         "buyer_starter",
