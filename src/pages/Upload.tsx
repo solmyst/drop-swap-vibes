@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Upload as UploadIcon, Image, X, Plus, Sparkles, CheckCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Upload as UploadIcon, Image, X, Plus, Sparkles, CheckCircle, AlertTriangle } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -36,12 +37,45 @@ const Upload = () => {
   const [brand, setBrand] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const [listingLimit, setListingLimit] = useState<number | null>(null);
+  const [currentListings, setCurrentListings] = useState<number>(0);
+  const [limitLoading, setLimitLoading] = useState(true);
 
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
     }
   }, [user, authLoading, navigate]);
+
+  // Check listing limits
+  useEffect(() => {
+    if (!user) return;
+
+    const checkLimits = async () => {
+      setLimitLoading(true);
+      
+      // Get listing limit
+      const { data: limitData } = await supabase.rpc('get_user_listing_limit', {
+        user_id_param: user.id
+      });
+      
+      // Get current usage
+      const { data: usageData } = await supabase
+        .from('user_usage')
+        .select('total_listings_created')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      setListingLimit(limitData ?? 3); // Default to 3 for free users
+      setCurrentListings(usageData?.total_listings_created ?? 0);
+      setLimitLoading(false);
+    };
+
+    checkLimits();
+  }, [user]);
+
+  const canCreateListing = listingLimit === -1 || currentListings < (listingLimit ?? 3);
+  const remainingListings = listingLimit === -1 ? 'Unlimited' : (listingLimit ?? 3) - currentListings;
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -87,6 +121,12 @@ const Upload = () => {
       return;
     }
 
+    if (!canCreateListing) {
+      toast.error('You have reached your listing limit. Upgrade your pass to list more items!');
+      navigate('/pricing');
+      return;
+    }
+
     if (!title || !category || !size || !condition || !price || images.length === 0) {
       toast.error('Please fill in all required fields');
       return;
@@ -95,6 +135,19 @@ const Upload = () => {
     setLoading(true);
 
     try {
+      // Ensure user has usage record
+      const { data: existingUsage } = await supabase
+        .from('user_usage')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!existingUsage) {
+        await supabase
+          .from('user_usage')
+          .insert({ user_id: user.id, total_chats_started: 0, total_listings_created: 0 });
+      }
+
       // Upload images to storage
       const uploadedImageUrls = await uploadImages();
 
@@ -114,7 +167,20 @@ const Upload = () => {
           status: isDraft ? 'draft' : 'active',
         });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('row-level security')) {
+          toast.error('You have reached your listing limit. Upgrade your pass to list more!');
+          navigate('/pricing');
+          return;
+        }
+        throw error;
+      }
+
+      // Update usage count
+      await supabase
+        .from('user_usage')
+        .update({ total_listings_created: (existingUsage?.total_listings_created || 0) + 1 })
+        .eq('user_id', user.id);
 
       toast.success(isDraft ? 'Draft saved!' : 'Listing published! 🎉');
       navigate('/profile');
@@ -127,7 +193,7 @@ const Upload = () => {
 
   const isFormValid = title && category && size && condition && price && images.length > 0;
 
-  if (authLoading) {
+  if (authLoading || limitLoading) {
     return (
       <div className="min-h-screen bg-background dark flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -140,6 +206,43 @@ const Upload = () => {
       <Navbar />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">
+          {/* Listing Limit Warning */}
+          {!canCreateListing && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6"
+            >
+              <Alert variant="destructive" className="glass border-destructive/50">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <span>You've used all {listingLimit} listings in your current pass.</span>
+                  <Link to="/pricing">
+                    <Button variant="hero" size="sm">Upgrade Now</Button>
+                  </Link>
+                </AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
+
+          {/* Listing Quota Display */}
+          {canCreateListing && listingLimit !== -1 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6"
+            >
+              <div className="glass rounded-xl p-4 flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  Listings remaining: <span className="text-foreground font-semibold">{remainingListings}</span>
+                </span>
+                <Link to="/pricing" className="text-primary text-sm hover:underline">
+                  Need more? Upgrade
+                </Link>
+              </div>
+            </motion.div>
+          )}
+
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
