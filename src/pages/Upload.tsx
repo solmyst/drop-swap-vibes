@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Upload as UploadIcon, Image, X, Plus, Sparkles, CheckCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -14,13 +15,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const categories = ["Tops", "Bottoms", "Dresses", "Shoes", "Accessories", "Jewelry", "Outerwear"];
 const sizes = ["XS", "S", "M", "L", "XL", "XXL", "One Size"];
 const conditions = ["New with Tags", "Like New", "Good", "Fair"];
 
 const Upload = () => {
-  const [images, setImages] = useState<string[]>([]);
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const [images, setImages] = useState<File[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [size, setSize] = useState("");
@@ -28,20 +35,106 @@ const Upload = () => {
   const [price, setPrice] = useState("");
   const [brand, setBrand] = useState("");
   const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newImages = Array.from(files).map(file => URL.createObjectURL(file));
-      setImages(prev => [...prev, ...newImages].slice(0, 5));
+      const newFiles = Array.from(files).slice(0, 5 - images.length);
+      setImages(prev => [...prev, ...newFiles]);
+      const newUrls = newFiles.map(file => URL.createObjectURL(file));
+      setImageUrls(prev => [...prev, ...newUrls]);
     }
   };
 
   const removeImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index));
+    setImageUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadImages = async (): Promise<string[]> => {
+    const uploadedUrls: string[] = [];
+    
+    for (const file of images) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user!.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      const { error: uploadError, data } = await supabase.storage
+        .from('listings')
+        .upload(fileName, file);
+      
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('listings')
+        .getPublicUrl(fileName);
+      
+      uploadedUrls.push(publicUrl);
+    }
+    
+    return uploadedUrls;
+  };
+
+  const handleSubmit = async (isDraft: boolean = false) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (!title || !category || !size || !condition || !price || images.length === 0) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Upload images to storage
+      const uploadedImageUrls = await uploadImages();
+
+      // Create listing in database
+      const { error } = await supabase
+        .from('listings')
+        .insert({
+          seller_id: user.id,
+          title,
+          description,
+          category: category.toLowerCase(),
+          size: size.toLowerCase(),
+          condition: condition.toLowerCase(),
+          brand: brand || null,
+          price: parseFloat(price),
+          images: uploadedImageUrls,
+          status: isDraft ? 'draft' : 'active',
+        });
+
+      if (error) throw error;
+
+      toast.success(isDraft ? 'Draft saved!' : 'Listing published! 🎉');
+      navigate('/profile');
+    } catch (error: any) {
+      console.error('Error creating listing:', error);
+      toast.error(error.message || 'Failed to create listing');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const isFormValid = title && category && size && condition && price && images.length > 0;
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background dark flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background dark">
@@ -56,7 +149,7 @@ const Upload = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
               <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">2 Free Listings Remaining</span>
+              <span className="text-sm font-medium">Start Selling Today</span>
             </div>
             <h1 className="font-display text-3xl md:text-4xl font-bold mb-3">
               List Your <span className="text-gradient">Thrift Find</span>
@@ -83,9 +176,9 @@ const Upload = () => {
               </p>
               
               <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-                {images.map((image, index) => (
+                {imageUrls.map((url, index) => (
                   <div key={index} className="relative aspect-square rounded-xl overflow-hidden group">
-                    <img src={image} alt="" className="w-full h-full object-cover" />
+                    <img src={url} alt="" className="w-full h-full object-cover" />
                     <button
                       onClick={() => removeImage(index)}
                       className="absolute top-2 right-2 w-6 h-6 bg-destructive rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -225,17 +318,30 @@ const Upload = () => {
 
             {/* Submit */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="outline" size="lg" className="flex-1">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="flex-1"
+                onClick={() => handleSubmit(true)}
+                disabled={loading}
+              >
                 Save as Draft
               </Button>
               <Button 
                 variant="hero" 
                 size="lg" 
                 className="flex-1 gap-2"
-                disabled={!isFormValid}
+                disabled={!isFormValid || loading}
+                onClick={() => handleSubmit(false)}
               >
-                <CheckCircle className="w-5 h-5" />
-                Publish Listing
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <CheckCircle className="w-5 h-5" />
+                    Publish Listing
+                  </>
+                )}
               </Button>
             </div>
           </motion.div>
