@@ -119,8 +119,7 @@ const Upload = () => {
       toast.success(isDraft ? 'Draft saved!' : 'Listing published! 🎉');
       navigate('/profile');
     } catch (error: any) {
-      console.error('Error creating listing:', error);
-      toast.error(error.message || 'Failed to create listing');
+      toast.error('Failed to create listing. Please try again.');
     } finally {
       setLoading(false);
     }
