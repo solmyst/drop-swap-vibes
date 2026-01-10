@@ -138,6 +138,30 @@ export type Database = {
           },
         ]
       }
+      private_profile_data: {
+        Row: {
+          created_at: string
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -147,7 +171,6 @@ export type Database = {
           id: string
           is_verified: boolean | null
           location: string | null
-          phone: string | null
           updated_at: string
           user_id: string
           username: string | null
@@ -160,7 +183,6 @@ export type Database = {
           id?: string
           is_verified?: boolean | null
           location?: string | null
-          phone?: string | null
           updated_at?: string
           user_id: string
           username?: string | null
@@ -173,7 +195,6 @@ export type Database = {
           id?: string
           is_verified?: boolean | null
           location?: string | null
-          phone?: string | null
           updated_at?: string
           user_id?: string
           username?: string | null
