@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -23,8 +23,10 @@ import {
 } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
-const allProducts = [
+// Demo products for initial display (will be replaced by DB data)
+const demoProducts = [
   {
     id: 1,
     title: "Vintage Levi's 501 High Waist Jeans",
@@ -117,48 +119,6 @@ const allProducts = [
     isNew: true,
     isFeatured: true,
   },
-  {
-    id: 9,
-    title: "Retro Sunglasses Cat Eye",
-    price: 449,
-    image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400&h=600&fit=crop",
-    seller: { name: "cool_shades", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100", verified: true },
-    condition: "New",
-    size: "One Size",
-    category: "accessories",
-  },
-  {
-    id: 10,
-    title: "Vintage Silk Scarf Floral",
-    price: 299,
-    image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=600&fit=crop",
-    seller: { name: "silk_dreams", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100", verified: false },
-    condition: "Like New",
-    size: "One Size",
-    category: "accessories",
-  },
-  {
-    id: 11,
-    title: "Cargo Pants Olive Green",
-    price: 1199,
-    originalPrice: 2200,
-    image: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400&h=600&fit=crop",
-    seller: { name: "street_style", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100", verified: true },
-    condition: "Good",
-    size: "M",
-    category: "bottoms",
-  },
-  {
-    id: 12,
-    title: "Pearl Drop Earrings Vintage",
-    price: 499,
-    image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=600&fit=crop",
-    seller: { name: "jewelry_box", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100", verified: true },
-    condition: "New",
-    size: "One Size",
-    category: "jewelry",
-    isNew: true,
-  },
 ];
 
 const Browse = () => {
@@ -167,6 +127,43 @@ const Browse = () => {
   const [selectedCondition, setSelectedCondition] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("newest");
+  const [products, setProducts] = useState<any[]>(demoProducts);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch listings from database
+  useEffect(() => {
+    const fetchListings = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (data && data.length > 0) {
+        const formattedProducts = data.map(item => ({
+          id: item.id,
+          title: item.title,
+          price: Number(item.price),
+          image: item.images?.[0] || "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=600&fit=crop",
+          seller: {
+            name: "seller",
+            avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
+            verified: false,
+          },
+          condition: item.condition,
+          size: item.size,
+          category: item.category,
+          isNew: true,
+          isFeatured: item.is_featured,
+        }));
+        setProducts([...formattedProducts, ...demoProducts]);
+      }
+      setLoading(false);
+    };
+
+    fetchListings();
+  }, []);
 
   const activeFilters = [
     selectedCondition && `Condition: ${selectedCondition}`,
@@ -179,6 +176,22 @@ const Browse = () => {
     setSelectedSize(null);
     setPriceRange([0, 5000]);
   };
+
+  const filteredProducts = products.filter(product => {
+    if (searchQuery && !product.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+    if (selectedCondition && product.condition !== selectedCondition) {
+      return false;
+    }
+    if (selectedSize && product.size !== selectedSize) {
+      return false;
+    }
+    if (product.price < priceRange[0] || product.price > priceRange[1]) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-background dark">
@@ -195,7 +208,7 @@ const Browse = () => {
               Browse <span className="text-gradient">Thrift Finds</span>
             </h1>
             <p className="text-muted-foreground">
-              Discover {allProducts.length}+ unique pieces from our community
+              Discover {filteredProducts.length}+ unique pieces from our community
             </p>
           </motion.div>
 
@@ -337,18 +350,24 @@ const Browse = () => {
           </motion.div>
 
           {/* Product Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {allProducts.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.03 }}
-              >
-                <ProductCard {...product} />
-              </motion.div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {filteredProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.03 }}
+                >
+                  <ProductCard {...product} />
+                </motion.div>
+              ))}
+            </div>
+          )}
 
           {/* Load More */}
           <div className="text-center mt-12">

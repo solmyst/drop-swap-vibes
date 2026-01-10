@@ -1,11 +1,26 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Heart, MessageCircle, Plus, Menu, X, User } from "lucide-react";
+import { Search, Heart, MessageCircle, Plus, Menu, X, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <motion.nav
@@ -61,11 +76,49 @@ const Navbar = () => {
                 Sell
               </Button>
             </Link>
-            <Link to="/profile">
-              <Button variant="glass" size="icon" className="rounded-full">
-                <User className="w-5 h-5" />
-              </Button>
-            </Link>
+            
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="glass" size="icon" className="rounded-full">
+                    <User className="w-5 h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="cursor-pointer">
+                      <User className="w-4 h-4 mr-2" />
+                      My Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/wishlist" className="cursor-pointer">
+                      <Heart className="w-4 h-4 mr-2" />
+                      Wishlist
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/messages" className="cursor-pointer">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Messages
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/auth">
+                <Button variant="glass" size="sm" className="gap-2">
+                  <User className="w-4 h-4" />
+                  Sign In
+                </Button>
+              </Link>
+            )}
+            
             <Button
               variant="ghost"
               size="icon"
@@ -112,6 +165,14 @@ const Navbar = () => {
                   Sell Your Clothes
                 </Button>
               </Link>
+              {!user && (
+                <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="outline" className="w-full justify-start gap-3">
+                    <User className="w-5 h-5" />
+                    Sign In
+                  </Button>
+                </Link>
+              )}
             </div>
           </motion.div>
         )}
