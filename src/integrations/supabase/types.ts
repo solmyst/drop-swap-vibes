@@ -109,6 +109,7 @@ export type Database = {
           conversation_id: string
           created_at: string
           id: string
+          image_url: string | null
           is_read: boolean | null
           sender_id: string
         }
@@ -117,6 +118,7 @@ export type Database = {
           conversation_id: string
           created_at?: string
           id?: string
+          image_url?: string | null
           is_read?: boolean | null
           sender_id: string
         }
@@ -125,6 +127,7 @@ export type Database = {
           conversation_id?: string
           created_at?: string
           id?: string
+          image_url?: string | null
           is_read?: boolean | null
           sender_id?: string
         }
@@ -201,6 +204,76 @@ export type Database = {
         }
         Relationships: []
       }
+      review_images: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          review_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          review_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_images_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "seller_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seller_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string | null
+          rating: number
+          review_text: string | null
+          reviewer_id: string
+          seller_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          rating: number
+          review_text?: string | null
+          reviewer_id: string
+          seller_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          rating?: number
+          review_text?: string | null
+          reviewer_id?: string
+          seller_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_reviews_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_passes: {
         Row: {
           created_at: string
@@ -217,7 +290,7 @@ export type Database = {
           expires_at: string
           id?: string
           is_active?: boolean | null
-          pass_type: Database["public"]["Enums"]["pass_type"]
+          pass_type?: Database["public"]["Enums"]["pass_type"]
           payment_id?: string | null
           starts_at?: string
           user_id: string
@@ -230,6 +303,33 @@ export type Database = {
           pass_type?: Database["public"]["Enums"]["pass_type"]
           payment_id?: string | null
           starts_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_usage: {
+        Row: {
+          created_at: string
+          id: string
+          total_chats_started: number
+          total_listings_created: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          total_chats_started?: number
+          total_listings_created?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          total_chats_started?: number
+          total_listings_created?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -268,10 +368,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_chat_limit: { Args: { user_id_param: string }; Returns: number }
+      get_user_listing_limit: {
+        Args: { user_id_param: string }
+        Returns: number
+      }
     }
     Enums: {
-      pass_type: "weekly" | "monthly" | "seller_pro"
+      pass_type:
+        | "free"
+        | "buyer_starter"
+        | "buyer_basic"
+        | "buyer_pro"
+        | "seller_starter"
+        | "seller_basic"
+        | "seller_pro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -399,7 +510,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      pass_type: ["weekly", "monthly", "seller_pro"],
+      pass_type: [
+        "free",
+        "buyer_starter",
+        "buyer_basic",
+        "buyer_pro",
+        "seller_starter",
+        "seller_basic",
+        "seller_pro",
+      ],
     },
   },
 } as const
