@@ -121,6 +121,11 @@ const demoProducts = [
   },
 ];
 
+// Sanitize search input
+const sanitizeSearchQuery = (query: string): string => {
+  return query.trim().slice(0, 100);
+};
+
 const Browse = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [priceRange, setPriceRange] = useState([0, 5000]);
@@ -225,8 +230,9 @@ const Browse = () => {
                 type="text"
                 placeholder="Search for items, brands, styles..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => setSearchQuery(sanitizeSearchQuery(e.target.value))}
                 className="pl-12 h-12 bg-muted border-0 rounded-xl"
+                maxLength={100}
               />
             </div>
             <div className="flex gap-3">

@@ -49,6 +49,11 @@ const Messages = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Sanitize search input
+  const sanitizeSearchQuery = (query: string): string => {
+    return query.trim().slice(0, 100);
+  };
   const [loading, setLoading] = useState(true);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -381,8 +386,9 @@ const Messages = () => {
                 <Input
                   placeholder="Search conversations..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => setSearchQuery(sanitizeSearchQuery(e.target.value))}
                   className="pl-10 bg-muted border-0 rounded-xl"
+                  maxLength={100}
                 />
               </div>
             </div>

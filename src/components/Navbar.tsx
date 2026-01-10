@@ -36,10 +36,10 @@ const Navbar = () => {
               whileHover={{ rotate: 12 }}
               className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center"
             >
-              <span className="text-xl font-bold text-primary-foreground">T</span>
+              <span className="text-lg font-bold text-primary-foreground">री</span>
             </motion.div>
             <span className="font-display font-bold text-xl hidden sm:block">
-              thrift<span className="text-gradient">ly</span>
+              री<span className="text-gradient">वस्त्र</span>
             </span>
           </Link>
 
