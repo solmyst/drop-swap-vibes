@@ -1,84 +1,57 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Sparkles, Crown, Zap, CreditCard, Shield, MessageCircle, Star } from "lucide-react";
+import { Check, Sparkles, Shield, MessageCircle, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import PassCard, { PassType, getPassDetails } from "@/components/PassCard";
 
-const passes = [
-  {
-    id: "weekly",
-    name: "Weekly Pass",
-    price: 99,
-    period: "week",
-    icon: Zap,
-    color: "from-blue-500 to-cyan-400",
-    features: [
-      "Unlimited seller chats",
-      "View seller phone numbers",
-      "Negotiate prices",
-      "Priority support",
-    ],
-    popular: false,
-  },
-  {
-    id: "monthly",
-    name: "Monthly Pass",
-    price: 299,
-    period: "month",
-    icon: Crown,
-    color: "from-primary to-secondary",
-    features: [
-      "Everything in Weekly",
-      "Early access to new drops",
-      "Exclusive discounts",
-      "Featured buyer badge",
-      "Save 25% vs weekly",
-    ],
-    popular: true,
-  },
-  {
-    id: "seller_pro",
-    name: "Seller Pro",
-    price: 499,
-    period: "month",
-    icon: Sparkles,
-    color: "from-accent to-coral",
-    features: [
-      "Unlimited listings",
-      "Featured placement",
-      "Analytics dashboard",
-      "Verified seller badge",
-      "Priority in search results",
-      "Dedicated support",
-    ],
-    popular: false,
-  },
-];
+const buyerPasses: PassType[] = ['buyer_starter', 'buyer_basic', 'buyer_pro'];
+const sellerPasses: PassType[] = ['seller_starter', 'seller_basic', 'seller_pro'];
 
 const Pricing = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const handlePurchase = async (passId: string, price: number) => {
+  const handlePurchase = async (passType: PassType) => {
     if (!user) {
       navigate('/auth');
       return;
     }
     
-    setLoading(passId);
+    setLoading(passType);
     
-    // Simulate payment - in production, integrate with Razorpay/Stripe
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast.success("Pass activated! 🎉 Enjoy unlimited access.");
-    setLoading(null);
-    navigate('/browse');
+    const passDetails = getPassDetails(passType);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    try {
+      // Create or update user pass
+      const { error } = await supabase
+        .from('user_passes')
+        .insert({
+          user_id: user.id,
+          pass_type: passType,
+          expires_at: expiresAt.toISOString(),
+          is_active: true,
+        });
+
+      if (error) throw error;
+
+      toast.success(`${passDetails.name} activated! 🎉`);
+      navigate('/browse');
+    } catch (error: any) {
+      toast.error('Failed to activate pass. Please try again.');
+    } finally {
+      setLoading(null);
+    }
   };
 
   return (
@@ -94,83 +67,118 @@ const Pricing = () => {
           >
             <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
               <Sparkles className="w-3 h-3 mr-1" />
-              Simple Pricing
+              Choose Your Plan
             </Badge>
             <h1 className="font-display text-3xl md:text-5xl font-bold mb-4">
               Unlock the Full <span className="text-gradient">Thrift Experience</span>
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Get unlimited access to chat with sellers, negotiate prices, and score the best deals
+              Start with 2 free chats & 3 free listings. Upgrade when you're ready to grow!
             </p>
           </motion.div>
 
-          {/* Passes Grid */}
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-16">
-            {passes.map((pass, index) => (
+          {/* Free Tier Info */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="glass rounded-2xl p-6 max-w-2xl mx-auto mb-12 text-center"
+          >
+            <h3 className="font-display font-bold text-lg mb-2">🎉 Free for Everyone</h3>
+            <p className="text-muted-foreground mb-4">
+              Every user gets <strong>2 free chats</strong> with sellers and can list <strong>3 products</strong> for free.
+              No credit card required!
+            </p>
+            <div className="flex justify-center gap-6 text-sm">
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-primary" />
+                <span>2 Free Chats</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-primary" />
+                <span>3 Free Listings</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-primary" />
+                <span>Browse Everything</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Tabs */}
+          <Tabs defaultValue="buyer" className="max-w-5xl mx-auto">
+            <TabsList className="w-full justify-center bg-muted rounded-xl mb-8 p-1">
+              <TabsTrigger value="buyer" className="flex-1 md:flex-none rounded-lg px-8">
+                🛍️ Buyer Passes
+              </TabsTrigger>
+              <TabsTrigger value="seller" className="flex-1 md:flex-none rounded-lg px-8">
+                📦 Seller Passes
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="buyer">
               <motion.div
-                key={pass.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className={`relative glass rounded-3xl p-6 ${
-                  pass.popular ? "ring-2 ring-primary" : ""
-                }`}
               >
-                {pass.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground">
-                      Most Popular
-                    </Badge>
-                  </div>
-                )}
-
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${pass.color} flex items-center justify-center mb-4`}>
-                  <pass.icon className="w-6 h-6 text-white" />
-                </div>
-
-                <h3 className="font-display text-xl font-bold mb-2">{pass.name}</h3>
-                
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="font-display text-4xl font-bold">₹{pass.price}</span>
-                  <span className="text-muted-foreground">/{pass.period}</span>
-                </div>
-
-                <ul className="space-y-3 mb-6">
-                  {pass.features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                      <span className="text-sm">{feature}</span>
-                    </li>
+                <p className="text-center text-muted-foreground mb-8">
+                  Chat with more sellers, negotiate prices, and access exclusive deals
+                </p>
+                <div className="grid md:grid-cols-3 gap-6">
+                  {buyerPasses.map((passType, index) => (
+                    <motion.div
+                      key={passType}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <PassCard
+                        passType={passType}
+                        onSelect={() => handlePurchase(passType)}
+                        loading={loading === passType}
+                      />
+                    </motion.div>
                   ))}
-                </ul>
-
-                <Button
-                  variant={pass.popular ? "hero" : "outline"}
-                  className="w-full gap-2"
-                  onClick={() => handlePurchase(pass.id, pass.price)}
-                  disabled={loading === pass.id}
-                >
-                  {loading === pass.id ? (
-                    <div className="w-5 h-5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <CreditCard className="w-4 h-4" />
-                      Get {pass.name}
-                    </>
-                  )}
-                </Button>
+                </div>
               </motion.div>
-            ))}
-          </div>
+            </TabsContent>
+
+            <TabsContent value="seller">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <p className="text-center text-muted-foreground mb-8">
+                  List more products, get featured placement, and grow your thrift business
+                </p>
+                <div className="grid md:grid-cols-3 gap-6">
+                  {sellerPasses.map((passType, index) => (
+                    <motion.div
+                      key={passType}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <PassCard
+                        passType={passType}
+                        onSelect={() => handlePurchase(passType)}
+                        loading={loading === passType}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            </TabsContent>
+          </Tabs>
 
           {/* Trust Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="glass rounded-3xl p-8 text-center max-w-3xl mx-auto"
+            className="glass rounded-3xl p-8 text-center max-w-3xl mx-auto mt-16"
           >
-            <h3 className="font-display text-xl font-bold mb-6">Trusted by 50,000+ thrifters</h3>
+            <h3 className="font-display text-xl font-bold mb-6">Why Choose ThriftHaven?</h3>
             <div className="grid grid-cols-3 gap-6">
               <div className="flex flex-col items-center">
                 <Shield className="w-8 h-8 text-primary mb-2" />

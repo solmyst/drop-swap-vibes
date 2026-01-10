@@ -1,51 +1,65 @@
 import { motion } from "framer-motion";
-import { Check, Zap, Crown, Rocket } from "lucide-react";
+import { Check, Zap, Crown, Rocket, MessageCircle, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
-const passes = [
+const buyerPasses = [
   {
-    id: "weekly",
-    name: "Weekly Pass",
-    price: 49,
-    period: "7 days",
-    icon: Zap,
-    color: "from-primary to-primary/60",
-    features: [
-      "Unlimited chats with sellers",
-      "View seller contact details",
-      "Priority support",
-    ],
+    name: "Starter",
+    price: 20,
+    period: "30 days",
+    icon: MessageCircle,
+    color: "from-blue-500 to-cyan-400",
+    features: ["Chat with 2 sellers", "Negotiate prices"],
     popular: false,
   },
   {
-    id: "monthly",
-    name: "Monthly Pass",
-    price: 149,
+    name: "Basic",
+    price: 50,
     period: "30 days",
-    icon: Crown,
-    color: "from-secondary to-accent",
-    features: [
-      "Everything in Weekly",
-      "Early access to new drops",
-      "Exclusive deals & discounts",
-      "Negotiate prices freely",
-    ],
+    icon: Zap,
+    color: "from-primary to-secondary",
+    features: ["Chat with 4 sellers", "Early access to drops"],
     popular: true,
   },
   {
-    id: "seller",
-    name: "Seller Pro",
-    price: 299,
+    name: "Pro",
+    price: 100,
+    period: "30 days",
+    icon: Crown,
+    color: "from-secondary to-accent",
+    features: ["Unlimited chats", "View contact details"],
+    popular: false,
+  },
+];
+
+const sellerPasses = [
+  {
+    name: "Starter",
+    price: 99,
+    period: "30 days",
+    icon: Package,
+    color: "from-emerald-500 to-teal-400",
+    features: ["10 product listings", "Basic analytics"],
+    popular: false,
+  },
+  {
+    name: "Basic",
+    price: 199,
     period: "30 days",
     icon: Rocket,
-    color: "from-accent to-pastelPink",
-    features: [
-      "Unlimited listings",
-      "Featured placement",
-      "Analytics dashboard",
-      "Verified seller badge",
-      "Priority in search",
-    ],
+    color: "from-accent to-coral",
+    features: ["25 product listings", "Featured placement"],
+    popular: true,
+  },
+  {
+    name: "Pro",
+    price: 299,
+    period: "30 days",
+    icon: Crown,
+    color: "from-coral to-pastelPink",
+    features: ["Unlimited listings", "Verified badge"],
     popular: false,
   },
 ];
@@ -68,85 +82,127 @@ const PassSection = () => {
         >
           <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm font-medium mb-4">
             <Zap className="w-4 h-4 text-primary" />
-            Unlock Full Access
+            Flexible Plans
           </span>
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
             Get your <span className="text-gradient">thrift pass</span>
           </h2>
           <p className="text-muted-foreground">
-            Connect with sellers, unlock contact details, and score the best deals with our flexible passes.
+            Start free with 2 chats & 3 listings. Upgrade when you're ready to grow!
           </p>
         </motion.div>
 
-        {/* Pass Cards */}
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {passes.map((pass, index) => {
-            const Icon = pass.icon;
-            return (
-              <motion.div
-                key={pass.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -8 }}
-                className={`relative rounded-3xl p-1 ${
-                  pass.popular
-                    ? "bg-gradient-to-b from-primary via-secondary to-accent"
-                    : "bg-border"
-                }`}
-              >
-                {pass.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full">
-                    MOST POPULAR
+        {/* Buyer Passes */}
+        <div className="mb-12">
+          <h3 className="font-display text-xl font-bold text-center mb-6">🛍️ For Buyers</h3>
+          <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            {buyerPasses.map((pass, index) => {
+              const Icon = pass.icon;
+              return (
+                <motion.div
+                  key={pass.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ y: -4 }}
+                  className={`relative rounded-2xl p-1 ${
+                    pass.popular
+                      ? "bg-gradient-to-b from-primary via-secondary to-accent"
+                      : "bg-border"
+                  }`}
+                >
+                  {pass.popular && (
+                    <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs">
+                      Popular
+                    </Badge>
+                  )}
+                  <div className="bg-card rounded-[0.9rem] p-4 h-full">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${pass.color} flex items-center justify-center mb-3`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <h4 className="font-display font-bold">{pass.name}</h4>
+                    <div className="flex items-baseline gap-1 mb-3">
+                      <span className="font-display font-bold text-2xl">₹{pass.price}</span>
+                      <span className="text-muted-foreground text-sm">/{pass.period}</span>
+                    </div>
+                    <ul className="space-y-2 mb-4">
+                      {pass.features.map((feature, i) => (
+                        <li key={i} className="flex items-center gap-2 text-sm">
+                          <Check className="w-4 h-4 text-primary" />
+                          <span className="text-muted-foreground">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                )}
-                <div className="bg-card rounded-[1.4rem] p-6 h-full flex flex-col">
-                  {/* Icon */}
-                  <div
-                    className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${pass.color} flex items-center justify-center mb-6`}
-                  >
-                    <Icon className="w-7 h-7 text-primary-foreground" />
-                  </div>
-
-                  {/* Name & Price */}
-                  <h3 className="font-display font-bold text-xl mb-1">
-                    {pass.name}
-                  </h3>
-                  <div className="flex items-baseline gap-1 mb-1">
-                    <span className="font-display font-bold text-4xl">
-                      ₹{pass.price}
-                    </span>
-                    <span className="text-muted-foreground">/ {pass.period}</span>
-                  </div>
-
-                  {/* Features */}
-                  <ul className="space-y-3 mt-6 mb-8 flex-1">
-                    {pass.features.map((feature, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                          <Check className="w-3 h-3 text-primary" />
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {feature}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* CTA */}
-                  <Button
-                    variant={pass.popular ? "hero" : "outline"}
-                    className="w-full"
-                    size="lg"
-                  >
-                    Get {pass.name}
-                  </Button>
-                </div>
-              </motion.div>
-            );
-          })}
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
+
+        {/* Seller Passes */}
+        <div className="mb-12">
+          <h3 className="font-display text-xl font-bold text-center mb-6">📦 For Sellers</h3>
+          <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            {sellerPasses.map((pass, index) => {
+              const Icon = pass.icon;
+              return (
+                <motion.div
+                  key={pass.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ y: -4 }}
+                  className={`relative rounded-2xl p-1 ${
+                    pass.popular
+                      ? "bg-gradient-to-b from-primary via-secondary to-accent"
+                      : "bg-border"
+                  }`}
+                >
+                  {pass.popular && (
+                    <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs">
+                      Popular
+                    </Badge>
+                  )}
+                  <div className="bg-card rounded-[0.9rem] p-4 h-full">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${pass.color} flex items-center justify-center mb-3`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <h4 className="font-display font-bold">{pass.name}</h4>
+                    <div className="flex items-baseline gap-1 mb-3">
+                      <span className="font-display font-bold text-2xl">₹{pass.price}</span>
+                      <span className="text-muted-foreground text-sm">/{pass.period}</span>
+                    </div>
+                    <ul className="space-y-2 mb-4">
+                      {pass.features.map((feature, i) => (
+                        <li key={i} className="flex items-center gap-2 text-sm">
+                          <Check className="w-4 h-4 text-primary" />
+                          <span className="text-muted-foreground">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center"
+        >
+          <Link to="/pricing">
+            <Button variant="hero" size="lg">
+              View All Plans
+            </Button>
+          </Link>
+        </motion.div>
       </div>
     </section>
   );

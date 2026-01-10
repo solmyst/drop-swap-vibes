@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Send, Image, MoreVertical, ArrowLeft, Search, Check, CheckCheck 
+  Send, Image, MoreVertical, ArrowLeft, Search, Check, CheckCheck, X 
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 interface Message {
   id: string;
   content: string;
+  image_url: string | null;
   sender_id: string;
   created_at: string;
   is_read: boolean;
@@ -49,7 +50,11 @@ const Messages = () => {
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -73,7 +78,6 @@ const Messages = () => {
         .order('last_message_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching conversations:', error);
         setLoading(false);
         return;
       }
@@ -99,7 +103,7 @@ const Messages = () => {
         // Get last message
         const { data: lastMsg } = await supabase
           .from('messages')
-          .select('content')
+          .select('content, image_url')
           .eq('conversation_id', convo.id)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -113,7 +117,7 @@ const Messages = () => {
             avatar_url: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherUserId}`,
           },
           listing: convo.listing,
-          last_message: lastMsg?.content,
+          last_message: lastMsg?.image_url ? '📷 Photo' : lastMsg?.content,
           unread_count: count || 0,
         };
       }));
@@ -132,7 +136,6 @@ const Messages = () => {
         if (existing) {
           setSelectedConvo(existing);
         } else if (listingId) {
-          // Create new conversation
           createNewConversation(sellerId, listingId);
         }
       }
@@ -144,6 +147,19 @@ const Messages = () => {
   // Create new conversation
   const createNewConversation = async (sellerId: string, listingId: string) => {
     if (!user) return;
+
+    // First ensure user has usage record
+    const { data: existingUsage } = await supabase
+      .from('user_usage')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!existingUsage) {
+      await supabase
+        .from('user_usage')
+        .insert({ user_id: user.id, total_chats_started: 0, total_listings_created: 0 });
+    }
 
     const { data, error } = await supabase
       .from('conversations')
@@ -160,13 +176,19 @@ const Messages = () => {
 
     if (error) {
       if (error.message.includes('row-level security')) {
-        toast.error('You need an active pass to start conversations');
+        toast.error('You have reached your chat limit. Upgrade your pass to chat with more sellers!');
         navigate('/pricing');
       } else {
         toast.error('Failed to start conversation');
       }
       return;
     }
+
+    // Update usage count
+    await supabase
+      .from('user_usage')
+      .update({ total_chats_started: (existingUsage?.total_chats_started || 0) + 1 })
+      .eq('user_id', user.id);
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -249,15 +271,60 @@ const Messages = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const cancelImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConvo || !user) return;
+    if ((!newMessage.trim() && !selectedImage) || !selectedConvo || !user) return;
     
+    let imageUrl: string | null = null;
+
+    // Upload image if selected
+    if (selectedImage) {
+      setUploadingImage(true);
+      try {
+        const fileExt = selectedImage.name.split('.').pop();
+        const fileName = `${user.id}/${selectedConvo.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('chat-images')
+          .upload(fileName, selectedImage);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('chat-images')
+          .getPublicUrl(fileName);
+
+        imageUrl = publicUrl;
+      } catch (error) {
+        toast.error('Failed to upload image');
+        setUploadingImage(false);
+        return;
+      }
+      setUploadingImage(false);
+    }
+
     const { error } = await supabase
       .from('messages')
       .insert({
         conversation_id: selectedConvo.id,
         sender_id: user.id,
-        content: newMessage.trim(),
+        content: newMessage.trim() || (imageUrl ? '' : ''),
+        image_url: imageUrl,
       });
 
     if (error) {
@@ -272,6 +339,7 @@ const Messages = () => {
       .eq('id', selectedConvo.id);
 
     setNewMessage("");
+    cancelImage();
   };
 
   const formatTime = (dateStr: string) => {
@@ -437,14 +505,26 @@ const Messages = () => {
                         className={`flex ${msg.sender_id === user?.id ? "justify-end" : "justify-start"}`}
                       >
                         <div
-                          className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${
+                          className={`max-w-[75%] rounded-2xl overflow-hidden ${
                             msg.sender_id === user?.id
                               ? "bg-primary text-primary-foreground rounded-br-md"
                               : "bg-muted rounded-bl-md"
                           }`}
                         >
-                          <p>{msg.content}</p>
-                          <div className={`flex items-center gap-1 mt-1 ${
+                          {msg.image_url && (
+                            <img
+                              src={msg.image_url}
+                              alt="Shared image"
+                              className="w-full max-w-xs cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => window.open(msg.image_url!, '_blank')}
+                            />
+                          )}
+                          {msg.content && (
+                            <div className="px-4 py-2.5">
+                              <p>{msg.content}</p>
+                            </div>
+                          )}
+                          <div className={`flex items-center gap-1 px-4 pb-2 ${
                             msg.sender_id === user?.id ? "justify-end" : "justify-start"
                           }`}>
                             <span className="text-[10px] opacity-70">{formatTime(msg.created_at)}</span>
@@ -463,10 +543,49 @@ const Messages = () => {
                   <div ref={messagesEndRef} />
                 </div>
 
+                {/* Image Preview */}
+                <AnimatePresence>
+                  {imagePreview && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 20 }}
+                      className="p-3 border-t border-border bg-muted/30"
+                    >
+                      <div className="relative inline-block">
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-20 h-20 rounded-lg object-cover"
+                        />
+                        <button
+                          onClick={cancelImage}
+                          className="absolute -top-2 -right-2 w-6 h-6 bg-destructive rounded-full flex items-center justify-center"
+                        >
+                          <X className="w-3 h-3 text-destructive-foreground" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 {/* Input */}
                 <div className="p-4 border-t border-border">
                   <div className="flex gap-3">
-                    <Button variant="ghost" size="icon" className="shrink-0">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="shrink-0"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingImage}
+                    >
                       <Image className="w-5 h-5" />
                     </Button>
                     <Input
@@ -480,9 +599,13 @@ const Messages = () => {
                       variant="hero"
                       size="icon"
                       onClick={handleSendMessage}
-                      disabled={!newMessage.trim()}
+                      disabled={(!newMessage.trim() && !selectedImage) || uploadingImage}
                     >
-                      <Send className="w-5 h-5" />
+                      {uploadingImage ? (
+                        <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                      ) : (
+                        <Send className="w-5 h-5" />
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -490,11 +613,9 @@ const Messages = () => {
             ) : (
               <div className="flex-1 flex items-center justify-center text-muted-foreground">
                 <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                    <Send className="w-8 h-8" />
-                  </div>
-                  <p className="font-display font-semibold text-lg">Your Messages</p>
-                  <p className="text-sm">Select a conversation to start chatting</p>
+                  <Image className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                  <h2 className="font-display text-xl font-semibold mb-2">Select a conversation</h2>
+                  <p>Choose from your existing conversations or start a new one</p>
                 </div>
               </div>
             )}

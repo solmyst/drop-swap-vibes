@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Browse from "./pages/Browse";
 import Upload from "./pages/Upload";
 import Profile from "./pages/Profile";
+import EditProfile from "./pages/EditProfile";
 import Auth from "./pages/Auth";
 import ProductDetail from "./pages/ProductDetail";
 import Messages from "./pages/Messages";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/browse" element={<Browse />} />
             <Route path="/upload" element={<Upload />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/messages" element={<Messages />} />
