@@ -108,7 +108,7 @@ const EditProfile = () => {
 
       toast.success('Profile updated successfully!');
       navigate('/profile');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Failed to update profile');
     } finally {
       setLoading(false);

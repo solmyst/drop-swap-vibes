@@ -4,9 +4,9 @@ import { Star, Quote } from "lucide-react";
 const testimonials = [
   {
     name: "Priya S.",
-    username: "@priya_thrifts",
+    username: "@priya_sustainable",
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-    content: "Found the most amazing vintage Levi's for just ₹800! The quality is insane and the seller was super helpful. This app is literally everything 💚",
+    content: "Found the most amazing vintage Levi's for just ₹800! The quality is insane and the seller was super helpful. रविस्त्र is literally everything 💚",
     rating: 5,
   },
   {
@@ -20,7 +20,7 @@ const testimonials = [
     name: "Zara K.",
     username: "@sustainable_zara",
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",
-    content: "Finally a thrift app that gets Gen-Z aesthetics! The UI is *chef's kiss* and I love how easy it is to list items. 10/10 would recommend!",
+    content: "Finally a sustainable fashion app that gets modern aesthetics! The UI is *chef's kiss* and I love how easy it is to list items. 10/10 would recommend!",
     rating: 5,
   },
 ];
@@ -39,7 +39,7 @@ const TestimonialsSection = () => {
             What our <span className="text-gradient">community</span> says
           </h2>
           <p className="text-muted-foreground">
-            Join thousands of happy thrifters who found their perfect style
+            Join thousands of happy users who found their perfect style
           </p>
         </motion.div>
 

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Browse from "./pages/Browse";
+import Store from "./pages/Store";
 import Upload from "./pages/Upload";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
@@ -19,6 +20,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminListings from "./pages/admin/AdminListings";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminPasses from "./pages/admin/AdminPasses";
+import AdminTransactions from "./pages/admin/AdminTransactions";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +34,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/browse" element={<Browse />} />
+            <Route path="/store" element={<Store />} />
             <Route path="/upload" element={<Upload />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/edit-profile" element={<EditProfile />} />
@@ -45,6 +48,7 @@ const App = () => (
               <Route path="listings" element={<AdminListings />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="passes" element={<AdminPasses />} />
+              <Route path="transactions" element={<AdminTransactions />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

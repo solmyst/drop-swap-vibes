@@ -1,27 +1,33 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Settings, Edit2, MapPin, Calendar, Star, Package, Heart, MessageCircle, Verified, Share2, LogOut, Crown } from "lucide-react";
+import { Edit2, MapPin, Calendar, Star, Package, Heart, MessageCircle, Verified, Share2, LogOut, Crown, TrendingUp, ArrowUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import EditListingModal from "@/components/EditListingModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
+import { usePassBenefits } from "@/hooks/usePassBenefits";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import SellerReviews from "@/components/SellerReviews";
-import PassCard, { PassType, getPassDetails } from "@/components/PassCard";
+import { getPassDetails, PassType } from "@/components/PassCard";
+import PassStatus from "@/components/PassStatus";
 import { Link } from "react-router-dom";
 
 interface Listing {
   id: string;
   title: string;
+  description?: string;
   price: number;
   images: string[];
   condition: string;
   size: string;
   category: string;
+  brand?: string;
   status: string;
 }
 
@@ -49,14 +55,17 @@ interface UserUsage {
 
 const Profile = () => {
   const { user, loading: authLoading, signOut } = useAuth();
+  const { benefits, usage: hookUsage } = usePassBenefits();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [userPass, setUserPass] = useState<UserPass | null>(null);
-  const [usage, setUsage] = useState<UserUsage | null>(null);
+  const [localUsage, setLocalUsage] = useState<UserUsage | null>(null);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [editingListing, setEditingListing] = useState<Listing | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -128,7 +137,7 @@ const Profile = () => {
       .maybeSingle();
 
     if (data) {
-      setUsage(data);
+      setLocalUsage(data);
     }
   };
 
@@ -155,6 +164,38 @@ const Profile = () => {
     navigate('/');
   };
 
+  const handleEditListing = (listing: Listing) => {
+    setEditingListing(listing);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingListing(null);
+  };
+
+  const handleUpdateListing = () => {
+    fetchListings(); // Refresh listings after update
+  };
+
+  const handleMarkAsSold = async (listingId: string) => {
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .update({ status: 'sold' })
+        .eq('id', listingId);
+
+      if (error) throw error;
+
+      // Refresh listings to update the UI
+      fetchListings();
+      toast.success('Item marked as sold! 🎉');
+    } catch (error) {
+      console.error('Error marking item as sold:', error);
+      toast.error('Failed to mark item as sold');
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background dark flex items-center justify-center">
@@ -165,6 +206,7 @@ const Profile = () => {
 
   const activeListings = listings.filter(l => l.status === 'active');
   const soldListings = listings.filter(l => l.status === 'sold');
+  const draftListings = listings.filter(l => l.status === 'draft');
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -175,14 +217,42 @@ const Profile = () => {
 
   // Calculate remaining limits
   const chatLimit = userPass?.pass_type === 'buyer_pro' || userPass?.pass_type?.startsWith('seller_') ? -1 : 
-                   userPass?.pass_type === 'buyer_basic' ? 4 :
+                   userPass?.pass_type === 'buyer_basic' ? 8 :
                    userPass?.pass_type === 'buyer_starter' ? 2 : 2;
   const listingLimit = userPass?.pass_type === 'seller_pro' ? -1 :
                        userPass?.pass_type === 'seller_basic' ? 25 :
                        userPass?.pass_type === 'seller_starter' ? 10 : 3;
 
-  const chatsUsed = usage?.total_chats_started || 0;
+  const chatsUsed = localUsage?.total_chats_started || 0;
   const listingsCreated = listings.length;
+
+  // Determine if user can upgrade and get upgrade message
+  const canUpgrade = () => {
+    const currentPass = benefits.currentPass;
+    if (currentPass === 'free') return true;
+    if (currentPass === 'buyer_starter') return true;
+    if (currentPass === 'buyer_basic') return true;
+    if (currentPass === 'seller_starter') return true;
+    if (currentPass === 'seller_basic') return true;
+    return false; // seller_pro and buyer_pro are highest tiers
+  };
+
+  const getUpgradeMessage = () => {
+    const currentPass = benefits.currentPass;
+    if (currentPass === 'free') return "Unlock premium features and grow your thrift business!";
+    if (currentPass === 'buyer_starter') return "Get more chats or try seller passes for unlimited listings!";
+    if (currentPass === 'buyer_basic') return "Upgrade to Pro for unlimited chats or try seller passes!";
+    if (currentPass === 'seller_starter') return "Get more listings and a verified badge!";
+    if (currentPass === 'seller_basic') return "Unlock unlimited listings and priority search!";
+    return "";
+  };
+
+  const shouldShowUpgradeCTA = () => {
+    // Show upgrade CTA if user can upgrade OR if they're hitting limits
+    return canUpgrade() || 
+           (!benefits.hasUnlimitedChats && hookUsage && hookUsage.chatsUsed >= benefits.chatLimit * 0.8) ||
+           (!benefits.hasUnlimitedListings && hookUsage && hookUsage.listingsUsed >= benefits.listingLimit * 0.8);
+  };
 
   return (
     <div className="min-h-screen bg-background dark">
@@ -200,8 +270,8 @@ const Profile = () => {
               <div className="relative">
                 <img
                   src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`}
-                  alt="Profile"
-                  className="w-24 h-24 md:w-32 md:h-32 rounded-2xl object-cover border-4 border-primary/20"
+                  alt={profile?.full_name || 'Profile'}
+                  className="w-24 h-24 rounded-2xl object-cover border-4 border-primary/20"
                 />
                 {profile?.is_verified && (
                   <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-primary rounded-full flex items-center justify-center">
@@ -210,95 +280,102 @@ const Profile = () => {
                 )}
               </div>
 
-              {/* Info */}
+              {/* Profile Info */}
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="font-display text-2xl md:text-3xl font-bold">
-                    {profile?.full_name || profile?.username || 'User'}
-                  </h1>
+                <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+                  <div>
+                    <h1 className="font-display text-2xl md:text-3xl font-bold">
+                      {profile?.full_name || 'Anonymous User'}
+                    </h1>
+                    <p className="text-muted-foreground">@{profile?.username || 'user'}</p>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Link to="/edit-profile">
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Edit2 className="w-4 h-4" />
+                        Edit Profile
+                      </Button>
+                    </Link>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Share2 className="w-4 h-4" />
+                      Share
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2">
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </Button>
+                  </div>
                 </div>
-                <p className="text-muted-foreground mb-3">@{profile?.username || 'user'}</p>
-                <p className="text-foreground mb-4 max-w-lg">
-                  {profile?.bio || "No bio yet. Add one to tell others about yourself!"}
-                </p>
+
+                {profile?.bio && (
+                  <p className="text-muted-foreground mb-4">{profile.bio}</p>
+                )}
+
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                   {profile?.location && (
-                    <span className="flex items-center gap-1">
+                    <div className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
                       {profile.location}
-                    </span>
+                    </div>
                   )}
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    Joined {profile?.created_at ? formatDate(profile.created_at) : 'Recently'}
-                  </span>
+                  {profile?.created_at && (
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      Joined {formatDate(profile.created_at)}
+                    </div>
+                  )}
                 </div>
-              </div>
 
-              {/* Actions */}
-              <div className="flex gap-3 w-full md:w-auto">
-                <Button variant="outline" size="icon" className="shrink-0">
-                  <Share2 className="w-4 h-4" />
-                </Button>
-                <Button variant="outline" className="gap-2 flex-1 md:flex-none" onClick={() => navigate('/edit-profile')}>
-                  <Edit2 className="w-4 h-4" />
-                  Edit Profile
-                </Button>
-                <Button variant="ghost" size="icon" className="shrink-0" onClick={handleSignOut}>
-                  <LogOut className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Current Pass */}
-            <div className="mt-6 pt-6 border-t border-border">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-display font-semibold flex items-center gap-2">
-                  <Crown className="w-5 h-5 text-primary" />
-                  Your Pass
-                </h3>
-                <Link to="/pricing">
-                  <Button variant="outline" size="sm">
-                    {userPass ? 'Upgrade' : 'Get a Pass'}
-                  </Button>
-                </Link>
-              </div>
-              
-              {userPass && currentPassDetails ? (
-                <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-                  <PassCard passType={userPass.pass_type} isActive compact />
-                  <div className="flex gap-6 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Expires:</span>
-                      <span className="ml-2 font-semibold">{formatDate(userPass.expires_at)}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Chats:</span>
-                      <span className="ml-2 font-semibold">
-                        {chatLimit === -1 ? 'Unlimited' : `${chatsUsed}/${chatLimit} used`}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Listings:</span>
-                      <span className="ml-2 font-semibold">
-                        {listingLimit === -1 ? 'Unlimited' : `${listingsCreated}/${listingLimit}`}
-                      </span>
+                {/* Current Pass Display */}
+                {currentPassDetails && (
+                  <div className="mt-4 flex items-center gap-3">
+                    <Badge className="bg-primary/10 text-primary border-primary/20 gap-1">
+                      <Crown className="w-3 h-3" />
+                      {currentPassDetails.name}
+                    </Badge>
+                    <div className="text-xs text-muted-foreground">
+                      Chats: {chatLimit === -1 ? 'Unlimited' : `${chatsUsed}/${chatLimit}`} • 
+                      Listings: {listingLimit === -1 ? 'Unlimited' : `${listingsCreated}/${listingLimit}`}
                     </div>
                   </div>
-                </div>
-              ) : (
-                <div className="glass rounded-xl p-4 bg-muted/30">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold">Free Tier</p>
-                      <p className="text-sm text-muted-foreground">
-                        {2 - chatsUsed} chats remaining • {3 - listingsCreated} listings remaining
-                      </p>
+                )}
+
+                {/* Upgrade CTA */}
+                {shouldShowUpgradeCTA() && (
+                  <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground mb-1">
+                          {benefits.currentPass === 'free' ? 'Ready to upgrade?' : 'Unlock more features'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {getUpgradeMessage()}
+                        </p>
+                      </div>
+                      <Link to="/pricing">
+                        <Button 
+                          variant={benefits.currentPass === 'free' ? 'default' : 'outline'} 
+                          size="sm" 
+                          className="gap-2 ml-3"
+                        >
+                          {benefits.currentPass === 'free' ? (
+                            <>
+                              <TrendingUp className="w-4 h-4" />
+                              Upgrade Now
+                            </>
+                          ) : (
+                            <>
+                              <ArrowUp className="w-4 h-4" />
+                              Explore Plans
+                            </>
+                          )}
+                        </Button>
+                      </Link>
                     </div>
-                    <Badge variant="outline">Free</Badge>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             {/* Stats */}
@@ -325,14 +402,21 @@ const Profile = () => {
             transition={{ delay: 0.1 }}
           >
             <Tabs defaultValue="listings" className="w-full">
-              <TabsList className="w-full justify-start bg-muted rounded-xl mb-6 p-1">
-                <TabsTrigger value="listings" className="flex-1 md:flex-none rounded-lg">
-                  My Listings ({activeListings.length})
+              <TabsList className="w-full justify-center bg-muted rounded-xl mb-6 p-1">
+                <TabsTrigger value="listings" className="rounded-lg">
+                  Active ({activeListings.length})
                 </TabsTrigger>
-                <TabsTrigger value="sold" className="flex-1 md:flex-none rounded-lg">
-                  Sold Items ({soldListings.length})
+                <TabsTrigger value="drafts" className="rounded-lg">
+                  Drafts ({draftListings.length})
                 </TabsTrigger>
-                <TabsTrigger value="reviews" className="flex-1 md:flex-none rounded-lg">
+                <TabsTrigger value="sold" className="rounded-lg">
+                  Sold ({soldListings.length})
+                </TabsTrigger>
+                <TabsTrigger value="pass" className="rounded-lg">
+                  <Crown className="w-4 h-4 mr-1" />
+                  My Pass
+                </TabsTrigger>
+                <TabsTrigger value="reviews" className="rounded-lg">
                   Reviews ({reviewCount})
                 </TabsTrigger>
               </TabsList>
@@ -342,7 +426,7 @@ const Profile = () => {
                   <div className="glass rounded-2xl p-8 text-center">
                     <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="font-display font-semibold text-lg mb-2">No listings yet</h3>
-                    <p className="text-muted-foreground mb-4">Start selling your thrift finds!</p>
+                    <p className="text-muted-foreground mb-4">Start selling your pre-loved fashion!</p>
                     <Button variant="hero" onClick={() => navigate('/upload')}>
                       Create Your First Listing
                     </Button>
@@ -366,10 +450,62 @@ const Profile = () => {
                             avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`,
                             verified: profile?.is_verified || false,
                           }}
+                          sellerId={user?.id}
                           condition={listing.condition}
                           size={listing.size}
                           category={listing.category}
+                          onEdit={() => handleEditListing(listing)}
+                          onMarkAsSold={() => handleMarkAsSold(listing.id)}
                         />
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="drafts">
+                {draftListings.length === 0 ? (
+                  <div className="glass rounded-2xl p-8 text-center">
+                    <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="font-display font-semibold text-lg mb-2">No drafts</h3>
+                    <p className="text-muted-foreground mb-4">Draft listings will appear here</p>
+                    <Button variant="outline" onClick={() => navigate('/upload')}>
+                      Create New Listing
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                    {draftListings.map((listing, index) => (
+                      <motion.div
+                        key={listing.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                      >
+                        <div className="relative">
+                          <ProductCard
+                            id={listing.id}
+                            title={listing.title}
+                            price={Number(listing.price)}
+                            image={listing.images?.[0] || "/placeholder.svg"}
+                            seller={{
+                              name: "you",
+                              avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`,
+                              verified: profile?.is_verified || false,
+                            }}
+                            sellerId={user?.id}
+                            condition={listing.condition}
+                            size={listing.size}
+                            category={listing.category}
+                            onEdit={() => handleEditListing(listing)}
+                          />
+                          {/* Draft overlay */}
+                          <div className="absolute top-2 left-2 z-10">
+                            <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">
+                              Draft
+                            </Badge>
+                          </div>
+                        </div>
                       </motion.div>
                     ))}
                   </div>
@@ -402,9 +538,11 @@ const Profile = () => {
                             avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`,
                             verified: profile?.is_verified || false,
                           }}
+                          sellerId={user?.id}
                           condition={listing.condition}
                           size={listing.size}
                           category={listing.category}
+                          onEdit={() => handleEditListing(listing)}
                         />
                       </motion.div>
                     ))}
@@ -412,16 +550,28 @@ const Profile = () => {
                 )}
               </TabsContent>
 
+              <TabsContent value="pass">
+                <PassStatus />
+              </TabsContent>
+
               <TabsContent value="reviews">
-                <div className="glass rounded-2xl p-6">
-                  <SellerReviews sellerId={user?.id || ''} />
-                </div>
+                <SellerReviews sellerId={user?.id || ''} />
               </TabsContent>
             </Tabs>
           </motion.div>
         </div>
       </main>
       <Footer />
+
+      {/* Edit Listing Modal */}
+      {editingListing && (
+        <EditListingModal
+          listing={editingListing}
+          isOpen={isEditModalOpen}
+          onClose={handleCloseEditModal}
+          onUpdate={handleUpdateListing}
+        />
+      )}
     </div>
   );
 };

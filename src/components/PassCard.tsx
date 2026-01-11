@@ -1,13 +1,15 @@
 import { motion } from "framer-motion";
-import { Check, Zap, Crown, Rocket, Sparkles, MessageCircle, Package } from "lucide-react";
+import { Check, Zap, Crown, Rocket, Sparkles, MessageCircle, Package, Smartphone, TrendingUp, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { canPurchasePass, isUpgrade, isDowngrade } from "@/lib/passUtils";
 
 export type PassType = 'free' | 'buyer_starter' | 'buyer_basic' | 'buyer_pro' | 'seller_starter' | 'seller_basic' | 'seller_pro';
 
 interface PassCardProps {
   passType: PassType;
   isActive?: boolean;
+  currentPass?: PassType;
   onSelect?: () => void;
   loading?: boolean;
   compact?: boolean;
@@ -17,7 +19,7 @@ const passDetails: Record<PassType, {
   name: string;
   price: number;
   period: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   color: string;
   features: string[];
   popular: boolean;
@@ -39,46 +41,40 @@ const passDetails: Record<PassType, {
   },
   buyer_starter: {
     name: "Buyer Starter",
-    price: 20,
+    price: 19,
     period: "30 days",
     icon: MessageCircle,
     color: "from-blue-500 to-cyan-400",
     features: [
       "Chat with 2 sellers",
-      "Negotiate prices",
-      "Priority support",
+      "View seller contact details",
     ],
     popular: false,
     category: 'buyer',
   },
   buyer_basic: {
     name: "Buyer Basic",
-    price: 50,
+    price: 69,
     period: "30 days",
     icon: Zap,
     color: "from-primary to-secondary",
     features: [
-      "Chat with 4 sellers",
-      "Negotiate prices",
-      "Priority support",
-      "Early access to new drops",
+      "Chat with 8 sellers",
+      "View seller contact details",
     ],
     popular: true,
     category: 'buyer',
   },
   buyer_pro: {
     name: "Buyer Pro",
-    price: 100,
+    price: 199,
     period: "30 days",
     icon: Crown,
     color: "from-secondary to-accent",
     features: [
       "Unlimited seller chats",
       "View seller contact details",
-      "Negotiate prices freely",
-      "Priority support",
       "Early access to new drops",
-      "Exclusive discounts",
     ],
     popular: false,
     category: 'buyer',
@@ -92,7 +88,6 @@ const passDetails: Record<PassType, {
     features: [
       "Up to 10 product listings",
       "Unlimited buyer chats",
-      "Basic analytics",
     ],
     popular: false,
     category: 'seller',
@@ -106,8 +101,7 @@ const passDetails: Record<PassType, {
     features: [
       "Up to 25 product listings",
       "Unlimited buyer chats",
-      "Featured placement",
-      "Analytics dashboard",
+      "Verified seller badge",
     ],
     popular: true,
     category: 'seller',
@@ -121,8 +115,6 @@ const passDetails: Record<PassType, {
     features: [
       "Unlimited listings",
       "Unlimited buyer chats",
-      "Featured placement",
-      "Full analytics dashboard",
       "Verified seller badge",
       "Priority in search results",
     ],
@@ -133,9 +125,13 @@ const passDetails: Record<PassType, {
 
 export const getPassDetails = (passType: PassType) => passDetails[passType];
 
-const PassCard = ({ passType, isActive, onSelect, loading, compact }: PassCardProps) => {
+const PassCard = ({ passType, isActive, currentPass = 'free', onSelect, loading, compact }: PassCardProps) => {
   const pass = passDetails[passType];
   const Icon = pass.icon;
+  
+  const purchaseCheck = canPurchasePass(currentPass, passType);
+  const isUpgradePass = isUpgrade(currentPass, passType);
+  const isDowngradePass = isDowngrade(currentPass, passType);
 
   if (compact) {
     return (
@@ -195,12 +191,26 @@ const PassCard = ({ passType, isActive, onSelect, loading, compact }: PassCardPr
           variant={pass.popular ? "hero" : "outline"}
           className="w-full gap-2"
           onClick={onSelect}
-          disabled={loading || isActive}
+          disabled={loading || isActive || !purchaseCheck.canPurchase}
         >
           {loading ? (
-            <div className="w-5 h-5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+            <>
+              <div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+              {pass.price > 0 ? "Processing Payment..." : "Activating..."}
+            </>
           ) : isActive ? (
             "Current Plan"
+          ) : !purchaseCheck.canPurchase ? (
+            <>
+              <Lock className="w-4 h-4" />
+              {isDowngradePass ? "Cannot Downgrade" : "Not Available"}
+            </>
+          ) : pass.price > 0 ? (
+            <>
+              <Smartphone className="w-4 h-4" />
+              {isUpgradePass && <TrendingUp className="w-4 h-4" />}
+              Pay ₹{pass.price} via UPI
+            </>
           ) : (
             `Get ${pass.name}`
           )}

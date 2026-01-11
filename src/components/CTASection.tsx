@@ -26,7 +26,7 @@ const CTASection = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-6"
           >
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">Start your thrift journey</span>
+            <span className="text-sm font-medium">Start your sustainable journey</span>
           </motion.div>
 
           <motion.h2
@@ -48,7 +48,7 @@ const CTASection = () => {
             transition={{ delay: 0.2 }}
             className="text-lg text-muted-foreground max-w-xl mx-auto mb-10"
           >
-            Join 50K+ thrifters finding unique pieces, saving money, and making sustainable fashion choices.
+            Join 50K+ users finding unique pieces, saving money, and making sustainable fashion choices.
           </motion.p>
 
           <motion.div

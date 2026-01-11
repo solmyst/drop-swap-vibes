@@ -83,6 +83,7 @@ const AdminDashboard = () => {
     { path: '/admin/listings', icon: Package, label: 'Listings' },
     { path: '/admin/users', icon: Users, label: 'Users' },
     { path: '/admin/passes', icon: CreditCard, label: 'Passes' },
+    { path: '/admin/transactions', icon: CreditCard, label: 'Transactions' },
   ];
 
   const isOverview = location.pathname === '/admin';
@@ -94,10 +95,15 @@ const AdminDashboard = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center">
-                <span className="text-lg font-bold text-primary-foreground">री</span>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center">
+                <img 
+                  src="/logo.svg" 
+                  alt="रविस्त्र Logo" 
+                  className="w-10 h-10"
+                />
               </div>
               <span className="font-display font-bold text-xl">
+                <span className="text-gradient">रविस्त्र</span>
                 Admin <span className="text-gradient">Panel</span>
               </span>
             </Link>

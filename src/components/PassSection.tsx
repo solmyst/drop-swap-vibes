@@ -7,29 +7,29 @@ import { Link } from "react-router-dom";
 const buyerPasses = [
   {
     name: "Starter",
-    price: 20,
+    price: 19,
     period: "30 days",
     icon: MessageCircle,
     color: "from-blue-500 to-cyan-400",
-    features: ["Chat with 2 sellers", "Negotiate prices"],
+    features: ["Chat with 2 sellers", "View contact details"],
     popular: false,
   },
   {
     name: "Basic",
-    price: 50,
+    price: 69,
     period: "30 days",
     icon: Zap,
     color: "from-primary to-secondary",
-    features: ["Chat with 4 sellers", "Early access to drops"],
+    features: ["Chat with 8 sellers", "View contact details"],
     popular: true,
   },
   {
     name: "Pro",
-    price: 100,
+    price: 199,
     period: "30 days",
     icon: Crown,
     color: "from-secondary to-accent",
-    features: ["Unlimited chats", "View contact details"],
+    features: ["Unlimited chats", "View contact details", "Early access to drops"],
     popular: false,
   },
 ];
@@ -41,7 +41,7 @@ const sellerPasses = [
     period: "30 days",
     icon: Package,
     color: "from-emerald-500 to-teal-400",
-    features: ["10 product listings", "Basic analytics"],
+    features: ["10 product listings", "Verified badge"],
     popular: false,
   },
   {
@@ -50,7 +50,7 @@ const sellerPasses = [
     period: "30 days",
     icon: Rocket,
     color: "from-accent to-coral",
-    features: ["25 product listings", "Featured placement"],
+    features: ["25 product listings", "Verified badge"],
     popular: true,
   },
   {
@@ -199,7 +199,7 @@ const PassSection = () => {
         >
           <Link to="/pricing">
             <Button variant="hero" size="lg">
-              View All Plans
+              Join Now
             </Button>
           </Link>
         </motion.div>

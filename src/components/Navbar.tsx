@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Heart, MessageCircle, Plus, Menu, X, User, LogOut } from "lucide-react";
+import { Search, Heart, MessageCircle, Plus, Menu, X, User, LogOut, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,12 +34,16 @@ const Navbar = () => {
           <Link to="/" className="flex items-center gap-2">
             <motion.div
               whileHover={{ rotate: 12 }}
-              className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center"
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
             >
-              <span className="text-lg font-bold text-primary-foreground">री</span>
+              <img 
+                src="/logo.svg" 
+                alt="रविस्त्र Logo" 
+                className="w-10 h-10"
+              />
             </motion.div>
             <span className="font-display font-bold text-xl hidden sm:block">
-              री<span className="text-gradient">वस्त्र</span>
+              <span className="text-gradient">रविस्त्र</span>
             </span>
           </Link>
 
@@ -49,6 +53,12 @@ const Navbar = () => {
               <Button variant="ghost" className="gap-2">
                 <Search className="w-4 h-4" />
                 Browse
+              </Button>
+            </Link>
+             <Link to="/store">
+              <Button variant="ghost" className="gap-2">
+                <ShoppingBag className="w-4 h-4" />
+                Store
               </Button>
             </Link>
             <Link to="/wishlist">
@@ -61,9 +71,6 @@ const Navbar = () => {
               <Button variant="ghost" className="gap-2 relative">
                 <MessageCircle className="w-4 h-4" />
                 Messages
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full text-[10px] flex items-center justify-center text-primary-foreground font-bold">
-                  3
-                </span>
               </Button>
             </Link>
           </div>
@@ -145,6 +152,12 @@ const Navbar = () => {
                 <Button variant="ghost" className="w-full justify-start gap-3">
                   <Search className="w-5 h-5" />
                   Browse
+                </Button>
+              </Link>
+              <Link to="/store" onClick={() => setIsMenuOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <ShoppingBag className="w-5 h-5" />
+                  Store
                 </Button>
               </Link>
               <Link to="/wishlist" onClick={() => setIsMenuOpen(false)}>

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Share2, Verified } from "lucide-react";
+import { Heart, MessageCircle, Share2, Verified, Edit, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { usePassBenefits } from "@/hooks/usePassBenefits";
 import { toast } from "sonner";
 
 interface ProductCardProps {
@@ -18,11 +19,14 @@ interface ProductCardProps {
     avatar: string;
     verified: boolean;
   };
+  sellerId?: string; // Add seller ID to identify ownership
   condition: string;
   size: string;
   category: string;
   isNew?: boolean;
   isFeatured?: boolean;
+  onEdit?: () => void; // Callback for editing
+  onMarkAsSold?: () => void; // Callback for marking as sold
 }
 
 const ProductCard = ({
@@ -32,20 +36,27 @@ const ProductCard = ({
   originalPrice,
   image,
   seller,
+  sellerId,
   condition,
   size,
   category,
   isNew,
   isFeatured,
+  onEdit,
+  onMarkAsSold,
 }: ProductCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const { user } = useAuth();
+  const { benefits, canStartChat } = usePassBenefits();
   const navigate = useNavigate();
 
   const discount = originalPrice
     ? Math.round(((originalPrice - price) / originalPrice) * 100)
     : 0;
+
+  // Check if current user is the seller
+  const isOwnListing = user && sellerId && user.id === sellerId;
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -61,11 +72,43 @@ const ProductCard = ({
   const handleChat = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
     if (!user) {
       navigate('/auth');
       return;
     }
-    navigate('/messages');
+
+    // Don't allow chatting with yourself
+    if (isOwnListing) {
+      toast.error("You can't chat with yourself!");
+      return;
+    }
+
+    // Check if user can start chat based on their pass
+    if (!canStartChat()) {
+      toast.error('Chat limit reached! Upgrade your pass to chat with more sellers.');
+      navigate('/pricing');
+      return;
+    }
+
+    // Navigate to messages with this product
+    navigate(`/messages?product=${id}`);
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onEdit) {
+      onEdit();
+    }
+  };
+
+  const handleMarkAsSold = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onMarkAsSold) {
+      onMarkAsSold();
+    }
   };
 
   return (
@@ -128,10 +171,27 @@ const ProductCard = ({
               animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 20 }}
               className="absolute bottom-4 left-4 right-4 flex gap-2"
             >
-              <Button variant="glass" size="sm" className="flex-1 gap-2" onClick={handleChat}>
-                <MessageCircle className="w-4 h-4" />
-                Chat
-              </Button>
+              {isOwnListing ? (
+                // Show edit and mark as sold buttons for own listings
+                <>
+                  <Button variant="glass" size="sm" className="flex-1 gap-2" onClick={handleEdit}>
+                    <Edit className="w-4 h-4" />
+                    Edit
+                  </Button>
+                  {onMarkAsSold && (
+                    <Button variant="glass" size="sm" className="flex-1 gap-2" onClick={handleMarkAsSold}>
+                      <CheckCircle className="w-4 h-4" />
+                      Sold
+                    </Button>
+                  )}
+                </>
+              ) : (
+                // Show chat button for other's listings
+                <Button variant="glass" size="sm" className="flex-1 gap-2" onClick={handleChat}>
+                  <MessageCircle className="w-4 h-4" />
+                  Chat
+                </Button>
+              )}
               <Button variant="glass" size="icon" className="shrink-0" onClick={(e) => e.preventDefault()}>
                 <Share2 className="w-4 h-4" />
               </Button>

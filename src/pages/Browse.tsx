@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X, Package } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
@@ -24,107 +24,25 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-// Demo products for initial display (will be replaced by DB data)
-const demoProducts = [
-  {
-    id: 1,
-    title: "Vintage Levi's 501 High Waist Jeans",
-    price: 1499,
-    originalPrice: 3500,
-    image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=600&fit=crop",
-    seller: { name: "thrift_queen", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100", verified: true },
-    condition: "Like New",
-    size: "M",
-    category: "bottoms",
-    isNew: true,
-    isFeatured: true,
-  },
-  {
-    id: 2,
-    title: "Y2K Butterfly Crop Top",
-    price: 599,
-    image: "https://images.unsplash.com/photo-1485462537746-965f33f7f6a7?w=400&h=600&fit=crop",
-    seller: { name: "retro_vibes", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100", verified: false },
-    condition: "Good",
-    size: "S",
-    category: "tops",
-    isNew: true,
-  },
-  {
-    id: 3,
-    title: "Nike Air Force 1 White",
-    price: 2999,
-    originalPrice: 7999,
-    image: "https://images.unsplash.com/photo-1600269452121-4f2416e55c28?w=400&h=600&fit=crop",
-    seller: { name: "sneaker_head", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100", verified: true },
-    condition: "Used",
-    size: "UK 8",
-    category: "shoes",
-    isFeatured: true,
-  },
-  {
-    id: 4,
-    title: "Oversized Vintage Band Tee - Nirvana",
-    price: 899,
-    image: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=600&fit=crop",
-    seller: { name: "vintage_vault", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100", verified: true },
-    condition: "Good",
-    size: "L",
-    category: "tops",
-  },
-  {
-    id: 5,
-    title: "Corduroy Mini Skirt Brown",
-    price: 799,
-    originalPrice: 1499,
-    image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&h=600&fit=crop",
-    seller: { name: "eco_fashion", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100", verified: false },
-    condition: "Like New",
-    size: "S",
-    category: "bottoms",
-    isNew: true,
-  },
-  {
-    id: 6,
-    title: "Gold Chunky Chain Necklace",
-    price: 349,
-    image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=600&fit=crop",
-    seller: { name: "bling_things", avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100", verified: true },
-    condition: "New",
-    size: "One Size",
-    category: "jewelry",
-    isFeatured: true,
-  },
-  {
-    id: 7,
-    title: "Leather Crossbody Bag Black",
-    price: 1299,
-    originalPrice: 2500,
-    image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=600&fit=crop",
-    seller: { name: "bag_lover", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100", verified: true },
-    condition: "Good",
-    size: "One Size",
-    category: "accessories",
-  },
-  {
-    id: 8,
-    title: "Vintage Denim Jacket Oversized",
-    price: 1899,
-    image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=600&fit=crop",
-    seller: { name: "denim_dreams", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100", verified: false },
-    condition: "Like New",
-    size: "L",
-    category: "tops",
-    isNew: true,
-    isFeatured: true,
-  },
-];
-
-// Sanitize search input
-const sanitizeSearchQuery = (query: string): string => {
-  return query.trim().slice(0, 100);
-};
+interface Product {
+  id: string;
+  title: string;
+  price: number;
+  images: string[];
+  seller_id: string;
+  condition: string;
+  size: string;
+  category: string;
+  brand?: string;
+  created_at: string;
+  profiles?: {
+    username: string;
+    avatar_url: string;
+    is_verified: boolean;
+  } | null;
+}
 
 const Browse = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -132,43 +50,75 @@ const Browse = () => {
   const [selectedCondition, setSelectedCondition] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("newest");
-  const [products, setProducts] = useState<any[]>(demoProducts);
-  const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Sanitize search input
+  const sanitizeSearchQuery = (query: string): string => {
+    return query.trim().slice(0, 100);
+  };
 
   // Fetch listings from database
   useEffect(() => {
-    const fetchListings = async () => {
-      setLoading(true);
-      const { data } = await supabase
+    fetchListings();
+  }, []);
+
+  const fetchListings = async () => {
+    setLoading(true);
+    try {
+      // First get all active listings
+      const { data: listingsData, error: listingsError } = await supabase
         .from('listings')
         .select('*')
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
-      if (data && data.length > 0) {
-        const formattedProducts = data.map(item => ({
-          id: item.id,
-          title: item.title,
-          price: Number(item.price),
-          image: item.images?.[0] || "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=600&fit=crop",
-          seller: {
-            name: "seller",
-            avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
-            verified: false,
-          },
-          condition: item.condition,
-          size: item.size,
-          category: item.category,
-          isNew: true,
-          isFeatured: item.is_featured,
-        }));
-        setProducts([...formattedProducts, ...demoProducts]);
+      if (listingsError) {
+        console.error('Listings error:', listingsError);
+        throw listingsError;
       }
-      setLoading(false);
-    };
 
-    fetchListings();
-  }, []);
+      if (!listingsData || listingsData.length === 0) {
+        setProducts([]);
+        return;
+      }
+
+      // Get unique seller IDs
+      const sellerIds = [...new Set(listingsData.map(listing => listing.seller_id))];
+      
+      // Fetch profiles for all sellers
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, username, avatar_url, is_verified')
+        .in('user_id', sellerIds);
+
+      if (profilesError) {
+        console.error('Profiles error:', profilesError);
+        // Continue without profiles data
+      }
+
+      // Create a map of user_id to profile
+      const profilesMap = new Map();
+      if (profilesData) {
+        profilesData.forEach(profile => {
+          profilesMap.set(profile.user_id, profile);
+        });
+      }
+
+      // Combine listings with profile data
+      const productsWithProfiles = listingsData.map(listing => ({
+        ...listing,
+        profiles: profilesMap.get(listing.seller_id) || null
+      }));
+
+      setProducts(productsWithProfiles as unknown as Product[]);
+    } catch (error) {
+      console.error('Error fetching listings:', error);
+      toast.error('Failed to load listings. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const activeFilters = [
     selectedCondition && `Condition: ${selectedCondition}`,
@@ -198,6 +148,20 @@ const Browse = () => {
     return true;
   });
 
+  // Sort products
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortBy) {
+      case 'price-low':
+        return a.price - b.price;
+      case 'price-high':
+        return b.price - a.price;
+      case 'newest':
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      default:
+        return 0;
+    }
+  });
+
   return (
     <div className="min-h-screen bg-background dark">
       <Navbar />
@@ -210,10 +174,10 @@ const Browse = () => {
             className="mb-8"
           >
             <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">
-              Browse <span className="text-gradient">Thrift Finds</span>
+              Browse <span className="text-gradient">Pre-Loved Fashion</span>
             </h1>
             <p className="text-muted-foreground">
-              Discover {filteredProducts.length}+ unique pieces from our community
+              Discover {products.length} unique pieces from our community
             </p>
           </motion.div>
 
@@ -244,7 +208,6 @@ const Browse = () => {
                   <SelectItem value="newest">Newest First</SelectItem>
                   <SelectItem value="price-low">Price: Low to High</SelectItem>
                   <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="popular">Most Popular</SelectItem>
                 </SelectContent>
               </Select>
               
@@ -254,75 +217,73 @@ const Browse = () => {
                     <SlidersHorizontal className="w-4 h-4" />
                     Filters
                     {activeFilters.length > 0 && (
-                      <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
+                      <Badge className="ml-1 bg-primary text-primary-foreground">
                         {activeFilters.length}
-                      </span>
+                      </Badge>
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent className="w-[340px]">
+                <SheetContent>
                   <SheetHeader>
-                    <SheetTitle className="font-display">Filters</SheetTitle>
+                    <SheetTitle>Filter Products</SheetTitle>
                   </SheetHeader>
-                  <div className="mt-6 space-y-6">
+                  <div className="space-y-6 mt-6">
                     {/* Price Range */}
                     <div>
-                      <h4 className="font-medium mb-4">Price Range</h4>
+                      <label className="text-sm font-medium mb-3 block">
+                        Price Range: ₹{priceRange[0]} - ₹{priceRange[1]}
+                      </label>
                       <Slider
                         value={priceRange}
                         onValueChange={setPriceRange}
-                        min={0}
                         max={5000}
                         step={100}
-                        className="mb-2"
+                        className="w-full"
                       />
-                      <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>₹{priceRange[0]}</span>
-                        <span>₹{priceRange[1]}</span>
-                      </div>
                     </div>
 
                     {/* Condition */}
                     <div>
-                      <h4 className="font-medium mb-3">Condition</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {["New", "Like New", "Good", "Used"].map((condition) => (
-                          <Badge
-                            key={condition}
-                            variant={selectedCondition === condition ? "default" : "outline"}
-                            className="cursor-pointer"
-                            onClick={() => setSelectedCondition(
-                              selectedCondition === condition ? null : condition
-                            )}
-                          >
-                            {condition}
-                          </Badge>
-                        ))}
-                      </div>
+                      <label className="text-sm font-medium mb-3 block">Condition</label>
+                      <Select value={selectedCondition || ""} onValueChange={(value) => setSelectedCondition(value || null)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Any condition" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Any condition</SelectItem>
+                          <SelectItem value="New">New</SelectItem>
+                          <SelectItem value="Like New">Like New</SelectItem>
+                          <SelectItem value="Good">Good</SelectItem>
+                          <SelectItem value="Used">Used</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     {/* Size */}
                     <div>
-                      <h4 className="font-medium mb-3">Size</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {["XS", "S", "M", "L", "XL", "One Size"].map((size) => (
-                          <Badge
-                            key={size}
-                            variant={selectedSize === size ? "default" : "outline"}
-                            className="cursor-pointer"
-                            onClick={() => setSelectedSize(
-                              selectedSize === size ? null : size
-                            )}
-                          >
-                            {size}
-                          </Badge>
-                        ))}
-                      </div>
+                      <label className="text-sm font-medium mb-3 block">Size</label>
+                      <Select value={selectedSize || ""} onValueChange={(value) => setSelectedSize(value || null)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Any size" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Any size</SelectItem>
+                          <SelectItem value="XS">XS</SelectItem>
+                          <SelectItem value="S">S</SelectItem>
+                          <SelectItem value="M">M</SelectItem>
+                          <SelectItem value="L">L</SelectItem>
+                          <SelectItem value="XL">XL</SelectItem>
+                          <SelectItem value="XXL">XXL</SelectItem>
+                          <SelectItem value="One Size">One Size</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
-                    <Button variant="outline" className="w-full" onClick={clearFilters}>
-                      Clear All Filters
-                    </Button>
+                    {activeFilters.length > 0 && (
+                      <Button variant="outline" onClick={clearFilters} className="w-full">
+                        Clear All Filters
+                      </Button>
+                    )}
                   </div>
                 </SheetContent>
               </Sheet>
@@ -332,12 +293,13 @@ const Browse = () => {
           {/* Active Filters */}
           {activeFilters.length > 0 && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
               className="flex flex-wrap gap-2 mb-6"
             >
-              {activeFilters.map((filter, i) => (
-                <Badge key={i} variant="secondary" className="gap-1">
+              {activeFilters.map((filter, index) => (
+                <Badge key={index} variant="secondary" className="gap-2">
                   {filter}
                   <X className="w-3 h-3 cursor-pointer" onClick={clearFilters} />
                 </Badge>
@@ -345,42 +307,71 @@ const Browse = () => {
             </motion.div>
           )}
 
-          {/* Categories */}
+          {/* Category Pills */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.3 }}
             className="mb-8"
           >
             <CategoryPills />
           </motion.div>
 
-          {/* Product Grid */}
+          {/* Products Grid */}
           {loading ? (
-            <div className="flex items-center justify-center py-20">
+            <div className="flex items-center justify-center py-16">
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
+          ) : sortedProducts.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-16"
+            >
+              <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-display text-xl font-semibold mb-2">No products found</h3>
+              <p className="text-muted-foreground mb-6">
+                {searchQuery || activeFilters.length > 0 
+                  ? "Try adjusting your search or filters" 
+                  : "Be the first to list your pre-loved fashion!"}
+              </p>
+              <Button onClick={() => window.location.href = '/upload'}>
+                List Your First Item
+              </Button>
+            </motion.div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {filteredProducts.map((product, index) => (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
+            >
+              {sortedProducts.map((product, index) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.03 }}
+                  transition={{ delay: index * 0.05 }}
                 >
-                  <ProductCard {...product} />
+                  <ProductCard
+                    id={product.id}
+                    title={product.title}
+                    price={product.price}
+                    image={product.images?.[0] || "/placeholder.svg"}
+                    seller={{
+                      name: product.profiles?.username || "Anonymous",
+                      avatar: product.profiles?.avatar_url || "/placeholder.svg",
+                      verified: product.profiles?.is_verified || false,
+                    }}
+                    sellerId={product.seller_id}
+                    condition={product.condition}
+                    size={product.size}
+                    category={product.category}
+                  />
                 </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
-
-          {/* Load More */}
-          <div className="text-center mt-12">
-            <Button variant="outline" size="lg">
-              Load More Finds
-            </Button>
-          </div>
         </div>
       </main>
       <Footer />

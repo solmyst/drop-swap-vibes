@@ -1,57 +1,114 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Check, Sparkles, Shield, MessageCircle, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
+import { usePassBenefits } from "@/hooks/usePassBenefits";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PassCard, { PassType, getPassDetails } from "@/components/PassCard";
+import UpiPaymentModal from "@/components/UpiPaymentModal";
+import { canPurchasePass, isUpgrade } from "@/lib/passUtils";
 
 const buyerPasses: PassType[] = ['buyer_starter', 'buyer_basic', 'buyer_pro'];
 const sellerPasses: PassType[] = ['seller_starter', 'seller_basic', 'seller_pro'];
 
 const Pricing = () => {
   const { user } = useAuth();
+  const { benefits, refreshBenefits } = usePassBenefits();
   const navigate = useNavigate();
   const [loading, setLoading] = useState<string | null>(null);
+  const [paymentModal, setPaymentModal] = useState<{
+    isOpen: boolean;
+    passType: PassType | null;
+  }>({ isOpen: false, passType: null });
+
+  const activatePass = async (passType: PassType, transactionId?: string) => {
+    if (!user) return;
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    const { error } = await supabase
+      .from('user_passes')
+      .insert({
+        user_id: user.id,
+        pass_type: passType,
+        expires_at: expiresAt.toISOString(),
+        is_active: true,
+        payment_id: transactionId,
+      });
+
+    if (error) throw error;
+  };
+
+  const handlePaymentComplete = async (transactionId: string) => {
+    if (!paymentModal.passType) return;
+    
+    setLoading(paymentModal.passType);
+    
+    try {
+      // For now, just activate the pass directly
+      // TODO: Add UPI transaction recording after running database migration
+      await activatePass(paymentModal.passType, transactionId);
+      
+      const passDetails = getPassDetails(paymentModal.passType);
+      const upgradeText = isUpgrade(benefits.currentPass, paymentModal.passType) ? ' (Upgraded!)' : '';
+      toast.success(`🎉 ${passDetails.name} activated successfully!${upgradeText}`);
+      
+      // Close modal and refresh
+      setPaymentModal({ isOpen: false, passType: null });
+      await refreshBenefits();
+      navigate('/browse');
+    } catch (error) {
+      console.error('Error activating pass:', error);
+      toast.error('Failed to activate pass. Please contact support with your transaction ID: ' + transactionId);
+    } finally {
+      setLoading(null);
+    }
+  };
 
   const handlePurchase = async (passType: PassType) => {
+    console.log('Purchase clicked for:', passType);
+    
     if (!user) {
       navigate('/auth');
       return;
     }
-    
-    setLoading(passType);
-    
-    const passDetails = getPassDetails(passType);
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
 
-    try {
-      // Create or update user pass
-      const { error } = await supabase
-        .from('user_passes')
-        .insert({
-          user_id: user.id,
-          pass_type: passType,
-          expires_at: expiresAt.toISOString(),
-          is_active: true,
-        });
-
-      if (error) throw error;
-
-      toast.success(`${passDetails.name} activated! 🎉`);
-      navigate('/browse');
-    } catch (error: any) {
-      toast.error('Failed to activate pass. Please try again.');
-    } finally {
-      setLoading(null);
+    // Check if user can purchase this pass
+    const purchaseCheck = canPurchasePass(benefits.currentPass, passType);
+    if (!purchaseCheck.canPurchase) {
+      toast.error(purchaseCheck.reason || 'Cannot purchase this pass');
+      return;
     }
+
+    const passDetails = getPassDetails(passType);
+    console.log('Pass details:', passDetails);
+    
+    // Handle free pass
+    if (passDetails.price === 0) {
+      setLoading(passType);
+      try {
+        await activatePass(passType);
+        toast.success(`${passDetails.name} activated! 🎉`);
+        await refreshBenefits();
+        navigate('/browse');
+      } catch (error) {
+        console.error('Error activating free pass:', error);
+        toast.error('Failed to activate pass. Please try again.');
+      } finally {
+        setLoading(null);
+      }
+      return;
+    }
+
+    // Handle paid passes - Open UPI payment modal
+    setPaymentModal({ isOpen: true, passType });
   };
 
   return (
@@ -134,6 +191,8 @@ const Pricing = () => {
                     >
                       <PassCard
                         passType={passType}
+                        isActive={benefits.currentPass === passType}
+                        currentPass={benefits.currentPass}
                         onSelect={() => handlePurchase(passType)}
                         loading={loading === passType}
                       />
@@ -161,6 +220,8 @@ const Pricing = () => {
                     >
                       <PassCard
                         passType={passType}
+                        isActive={benefits.currentPass === passType}
+                        currentPass={benefits.currentPass}
                         onSelect={() => handlePurchase(passType)}
                         loading={loading === passType}
                       />
@@ -178,11 +239,11 @@ const Pricing = () => {
             transition={{ delay: 0.3 }}
             className="glass rounded-3xl p-8 text-center max-w-3xl mx-auto mt-16"
           >
-            <h3 className="font-display text-xl font-bold mb-6">Why Choose ThriftHaven?</h3>
+            <h3 className="font-display text-xl font-bold mb-6">Why Choose रविस्त्र?</h3>
             <div className="grid grid-cols-3 gap-6">
               <div className="flex flex-col items-center">
                 <Shield className="w-8 h-8 text-primary mb-2" />
-                <span className="text-sm text-muted-foreground">Secure Payments</span>
+                <span className="text-sm text-muted-foreground">Secure UPI Payments</span>
               </div>
               <div className="flex flex-col items-center">
                 <MessageCircle className="w-8 h-8 text-primary mb-2" />
@@ -190,13 +251,25 @@ const Pricing = () => {
               </div>
               <div className="flex flex-col items-center">
                 <Star className="w-8 h-8 text-primary mb-2" />
-                <span className="text-sm text-muted-foreground">Money-back Guarantee</span>
+                <span className="text-sm text-muted-foreground">Instant Activation</span>
               </div>
             </div>
           </motion.div>
         </div>
       </main>
       <Footer />
+
+      {/* UPI Payment Modal */}
+      {paymentModal.passType && (
+        <UpiPaymentModal
+          isOpen={paymentModal.isOpen}
+          onClose={() => setPaymentModal({ isOpen: false, passType: null })}
+          passType={paymentModal.passType}
+          userId={user?.id || ''}
+          onPaymentComplete={handlePaymentComplete}
+          loading={loading === paymentModal.passType}
+        />
+      )}
     </div>
   );
 };

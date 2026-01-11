@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles, Leaf, TrendingUp } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -32,7 +32,7 @@ const Hero = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8"
           >
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">The Gen-Z Thrift Revolution</span>
+            <span className="text-sm font-medium">The Sustainable Fashion Revolution</span>
           </motion.div>
 
           {/* Main heading */}
@@ -54,8 +54,9 @@ const Hero = () => {
             transition={{ delay: 0.4 }}
             className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10"
           >
-            Buy & sell pre-loved fashion with zero waste energy. 
-            Join 50K+ thrift lovers finding their next favorite fit.
+            Buy & sell pre-loved fashion with zero waste energy.
+
+            Dekh kya raha ho becho.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -79,7 +80,7 @@ const Hero = () => {
           </motion.div>
 
           {/* Stats */}
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
@@ -100,7 +101,7 @@ const Hero = () => {
                 <div className="text-xs text-muted-foreground">{stat.label}</div>
               </motion.div>
             ))}
-          </motion.div>
+          </motion.div> */}
         </div>
       </div>
 

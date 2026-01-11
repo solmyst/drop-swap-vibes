@@ -154,7 +154,8 @@ const SellerReviews = ({ sellerId, showAddReview = false }: SellerReviewsProps) 
       setImages([]);
       setImagePreviewUrls([]);
       fetchReviews();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      console.error('Error submitting review:', error);
       toast.error('Failed to submit review');
     } finally {
       setSubmitting(false);

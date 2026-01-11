@@ -69,7 +69,16 @@ const Wishlist = () => {
         (wishlist || [])
           .filter(w => w.listing)
           .map(async (w) => {
-            const listing = w.listing as any;
+            const listing = w.listing as {
+              id: string;
+              title: string;
+              price: number;
+              images: string[];
+              condition: string;
+              size: string;
+              category: string;
+              seller_id: string;
+            };
             
             const { data: profile } = await supabase
               .from('profiles')

@@ -36,11 +36,12 @@ const Auth = () => {
         }
         const { error } = await signUp(email, password, username);
         if (error) throw error;
-        toast.success("Account created! Welcome to Thriftly! 🛍️");
+        toast.success("Account created! Welcome to रविस्त्र! 🛍️");
         navigate("/");
       }
-    } catch (error: any) {
-      toast.error(error.message || "Something went wrong");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Something went wrong";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -67,11 +68,15 @@ const Auth = () => {
 
         {/* Logo */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center">
-            <span className="text-2xl font-bold text-primary-foreground">T</span>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center">
+            <img 
+              src="/logo.svg" 
+              alt="रविस्त्र Logo" 
+              className="w-12 h-12"
+            />
           </div>
           <span className="font-display font-bold text-2xl">
-            thrift<span className="text-gradient">ly</span>
+            <span className="text-gradient">रविस्त्र</span>
           </span>
         </div>
 
@@ -97,7 +102,7 @@ const Auth = () => {
                   <Input
                     id="username"
                     type="text"
-                    placeholder="thrift_queen"
+                    placeholder="ravistra_user"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="h-12 pl-12 bg-muted border-0 rounded-xl"
@@ -166,7 +171,7 @@ const Auth = () => {
 
           <div className="mt-6 text-center">
             <p className="text-muted-foreground">
-              {isLogin ? "New to Thriftly?" : "Already have an account?"}{" "}
+              {isLogin ? "New to रविस्त्र?" : "Already have an account?"}{" "}
               <button
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-primary font-semibold hover:underline"
