@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, User, Sparkles, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Sparkles, ArrowLeft, AlertCircle, CheckCircle } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -8,45 +8,252 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { ASSETS } from "@/lib/assets";
+import { supabase } from "@/integrations/supabase/client";
+
+type AuthMode = 'login' | 'signup' | 'forgot-password' | 'reset-password';
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+
+  // Password validation
+  const validatePassword = (pwd: string) => {
+    const minLength = pwd.length >= 8;
+    const hasUpper = /[A-Z]/.test(pwd);
+    const hasLower = /[a-z]/.test(pwd);
+    const hasNumber = /\d/.test(pwd);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
+    
+    return {
+      minLength,
+      hasUpper,
+      hasLower,
+      hasNumber,
+      hasSpecial,
+      isValid: minLength && hasUpper && hasLower && hasNumber && hasSpecial
+    };
+  };
+
+  // Email validation
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Username validation
+  const validateUsername = (username: string) => {
+    const minLength = username.length >= 3;
+    const maxLength = username.length <= 20;
+    const validChars = /^[a-zA-Z0-9_]+$/.test(username);
+    
+    return {
+      minLength,
+      maxLength,
+      validChars,
+      isValid: minLength && maxLength && validChars
+    };
+  };
+
+  const passwordValidation = validatePassword(password);
+  const usernameValidation = validateUsername(username);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      if (isLogin) {
-        const { error } = await signIn(email, password);
-        if (error) throw error;
-        toast.success("Welcome back! 🎉");
-        navigate("/");
-      } else {
-        if (!username.trim()) {
-          toast.error("Please enter a username");
+      if (mode === 'login') {
+        if (!validateEmail(email)) {
+          toast.error("Please enter a valid email address");
           setLoading(false);
           return;
         }
-        const { error } = await signUp(email, password, username);
-        if (error) throw error;
-        toast.success("Account created! Welcome to रीवस्त्र! 🛍️");
+
+        const { error } = await signIn(email, password);
+        if (error) {
+          // Handle specific Supabase auth errors
+          if (error.message.includes('Invalid login credentials')) {
+            toast.error("Invalid email or password. Please check your credentials.");
+          } else if (error.message.includes('Email not confirmed')) {
+            toast.error("Please check your email and click the confirmation link before signing in.");
+          } else if (error.message.includes('Too many requests')) {
+            toast.error("Too many login attempts. Please wait a few minutes and try again.");
+          } else {
+            toast.error("Login failed. Please try again.");
+          }
+          setLoading(false);
+          return;
+        }
+        toast.success("Welcome back! 🎉");
         navigate("/");
+
+      } else if (mode === 'signup') {
+        // Validation checks
+        if (!validateEmail(email)) {
+          toast.error("Please enter a valid email address");
+          setLoading(false);
+          return;
+        }
+
+        if (!usernameValidation.isValid) {
+          if (!usernameValidation.minLength) {
+            toast.error("Username must be at least 3 characters long");
+          } else if (!usernameValidation.maxLength) {
+            toast.error("Username must be less than 20 characters");
+          } else if (!usernameValidation.validChars) {
+            toast.error("Username can only contain letters, numbers, and underscores");
+          }
+          setLoading(false);
+          return;
+        }
+
+        if (!passwordValidation.isValid) {
+          toast.error("Password doesn't meet security requirements");
+          setLoading(false);
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          toast.error("Passwords don't match");
+          setLoading(false);
+          return;
+        }
+
+        // Check if username already exists
+        const { data: existingUser } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('username', username.toLowerCase())
+          .single();
+
+        if (existingUser) {
+          toast.error("Username already taken. Please choose a different one.");
+          setLoading(false);
+          return;
+        }
+
+        const { error } = await signUp(email, password, username);
+        if (error) {
+          // Handle specific Supabase auth errors
+          if (error.message.includes('User already registered')) {
+            toast.error("An account with this email already exists. Try signing in instead.");
+          } else if (error.message.includes('Password should be at least')) {
+            toast.error("Password is too weak. Please use a stronger password.");
+          } else if (error.message.includes('Unable to validate email address')) {
+            toast.error("Invalid email address. Please check and try again.");
+          } else {
+            toast.error("Account creation failed. Please try again.");
+          }
+          setLoading(false);
+          return;
+        }
+        
+        toast.success("Account created! Please check your email to confirm your account. 📧");
+        setEmailSent(true);
+
+      } else if (mode === 'forgot-password') {
+        if (!validateEmail(email)) {
+          toast.error("Please enter a valid email address");
+          setLoading(false);
+          return;
+        }
+
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth?mode=reset-password`,
+        });
+
+        if (error) {
+          toast.error("Failed to send reset email. Please try again.");
+        } else {
+          toast.success("Password reset email sent! Check your inbox. 📧");
+          setEmailSent(true);
+        }
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Something went wrong";
-      toast.error(errorMessage);
+      console.error('Auth error:', error);
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
+
+  const PasswordStrengthIndicator = ({ password }: { password: string }) => {
+    const validation = validatePassword(password);
+    
+    if (!password) return null;
+
+    return (
+      <div className="mt-2 space-y-1">
+        <div className="text-xs text-muted-foreground">Password requirements:</div>
+        <div className="space-y-1">
+          <div className={`flex items-center gap-2 text-xs ${validation.minLength ? 'text-green-600' : 'text-red-500'}`}>
+            {validation.minLength ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+            At least 8 characters
+          </div>
+          <div className={`flex items-center gap-2 text-xs ${validation.hasUpper ? 'text-green-600' : 'text-red-500'}`}>
+            {validation.hasUpper ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+            One uppercase letter
+          </div>
+          <div className={`flex items-center gap-2 text-xs ${validation.hasLower ? 'text-green-600' : 'text-red-500'}`}>
+            {validation.hasLower ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+            One lowercase letter
+          </div>
+          <div className={`flex items-center gap-2 text-xs ${validation.hasNumber ? 'text-green-600' : 'text-red-500'}`}>
+            {validation.hasNumber ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+            One number
+          </div>
+          <div className={`flex items-center gap-2 text-xs ${validation.hasSpecial ? 'text-green-600' : 'text-red-500'}`}>
+            {validation.hasSpecial ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+            One special character
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  if (emailSent) {
+    return (
+      <div className="min-h-screen bg-background dark flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md text-center"
+        >
+          <div className="glass rounded-3xl p-8">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Mail className="w-8 h-8 text-green-600" />
+            </div>
+            <h1 className="font-display text-2xl font-bold mb-2">Check your email</h1>
+            <p className="text-muted-foreground mb-6">
+              {mode === 'signup' 
+                ? "We've sent a confirmation link to your email. Please click it to activate your account."
+                : "We've sent a password reset link to your email. Click it to reset your password."
+              }
+            </p>
+            <Button
+              onClick={() => {
+                setEmailSent(false);
+                setMode('login');
+              }}
+              variant="outline"
+              className="w-full"
+            >
+              Back to Sign In
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background dark flex items-center justify-center p-4">
@@ -85,17 +292,19 @@ const Auth = () => {
         <div className="glass rounded-3xl p-8">
           <div className="text-center mb-8">
             <h1 className="font-display text-2xl font-bold mb-2">
-              {isLogin ? "Welcome back" : "Join the movement"}
+              {mode === 'login' && "Welcome back"}
+              {mode === 'signup' && "Join the movement"}
+              {mode === 'forgot-password' && "Reset password"}
             </h1>
             <p className="text-muted-foreground">
-              {isLogin 
-                ? "Sign in to continue thrifting" 
-                : "Start your sustainable fashion journey"}
+              {mode === 'login' && "Sign in to continue thrifting"}
+              {mode === 'signup' && "Start your sustainable fashion journey"}
+              {mode === 'forgot-password' && "Enter your email to reset your password"}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {!isLogin && (
+            {mode === 'signup' && (
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
                 <div className="relative">
@@ -105,10 +314,18 @@ const Auth = () => {
                     type="text"
                     placeholder="reevastra_user"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase())}
                     className="h-12 pl-12 bg-muted border-0 rounded-xl"
+                    required
                   />
                 </div>
+                {username && !usernameValidation.isValid && (
+                  <div className="text-xs text-red-500 mt-1">
+                    {!usernameValidation.minLength && "Username must be at least 3 characters"}
+                    {!usernameValidation.maxLength && "Username must be less than 20 characters"}
+                    {!usernameValidation.validChars && "Only letters, numbers, and underscores allowed"}
+                  </div>
+                )}
               </div>
             )}
 
@@ -128,29 +345,72 @@ const Auth = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 pl-12 pr-12 bg-muted border-0 rounded-xl"
-                  required
-                  minLength={6}
-                />
+            {mode !== 'forgot-password' && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-12 pl-12 pr-12 bg-muted border-0 rounded-xl"
+                    required
+                    minLength={mode === 'signup' ? 8 : 6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {mode === 'signup' && <PasswordStrengthIndicator password={password} />}
+              </div>
+            )}
+
+            {mode === 'signup' && (
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="h-12 pl-12 pr-12 bg-muted border-0 rounded-xl"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {confirmPassword && password !== confirmPassword && (
+                  <div className="text-xs text-red-500 mt-1">Passwords don't match</div>
+                )}
+              </div>
+            )}
+
+            {mode === 'login' && (
+              <div className="text-right">
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setMode('forgot-password')}
+                  className="text-sm text-primary hover:underline"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  Forgot password?
                 </button>
               </div>
-            </div>
+            )}
 
             <Button
               type="submit"
@@ -164,22 +424,48 @@ const Auth = () => {
               ) : (
                 <>
                   <Sparkles className="w-5 h-5" />
-                  {isLogin ? "Sign In" : "Create Account"}
+                  {mode === 'login' && "Sign In"}
+                  {mode === 'signup' && "Create Account"}
+                  {mode === 'forgot-password' && "Send Reset Email"}
                 </>
               )}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-muted-foreground">
-              {isLogin ? "New to रीवस्त्र?" : "Already have an account?"}{" "}
-              <button
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-primary font-semibold hover:underline"
-              >
-                {isLogin ? "Create an account" : "Sign in"}
-              </button>
-            </p>
+            {mode === 'login' && (
+              <p className="text-muted-foreground">
+                New to रीवस्त्र?{" "}
+                <button
+                  onClick={() => setMode('signup')}
+                  className="text-primary font-semibold hover:underline"
+                >
+                  Create an account
+                </button>
+              </p>
+            )}
+            {mode === 'signup' && (
+              <p className="text-muted-foreground">
+                Already have an account?{" "}
+                <button
+                  onClick={() => setMode('login')}
+                  className="text-primary font-semibold hover:underline"
+                >
+                  Sign in
+                </button>
+              </p>
+            )}
+            {mode === 'forgot-password' && (
+              <p className="text-muted-foreground">
+                Remember your password?{" "}
+                <button
+                  onClick={() => setMode('login')}
+                  className="text-primary font-semibold hover:underline"
+                >
+                  Sign in
+                </button>
+              </p>
+            )}
           </div>
         </div>
 
