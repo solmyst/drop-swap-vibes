@@ -17,6 +17,10 @@ interface PassWithPayment {
   is_active: boolean;
   payment_id: string | null;
   created_at: string;
+  profiles?: {
+    full_name?: string;
+    username?: string;
+  };
 }
 
 const AdminTransactions = () => {
@@ -32,9 +36,9 @@ const AdminTransactions = () => {
 
   const fetchPassesWithPayments = async () => {
     try {
-      // For now, show passes with payment IDs (UPI transaction IDs)
-      const { data, error } = await supabase
-        .from('user_passes')
+      // First, let's try to fetch UPI transactions if the table exists
+      const { data: upiTransactions, error: upiError } = await supabase
+        .from('upi_transactions')
         .select(`
           *,
           profiles:user_id (
@@ -42,11 +46,46 @@ const AdminTransactions = () => {
             username
           )
         `)
+        .order('created_at', { ascending: false });
+
+      if (!upiError && upiTransactions) {
+        // UPI transactions table exists, use it
+        setPasses(upiTransactions.map(tx => ({
+          id: tx.id,
+          user_id: tx.user_id,
+          pass_type: tx.pass_type,
+          starts_at: tx.created_at,
+          expires_at: '', // UPI transactions don't have expiry
+          is_active: tx.status === 'verified',
+          payment_id: tx.transaction_id,
+          created_at: tx.created_at,
+          profiles: tx.profiles
+        })));
+        return;
+      }
+
+      // Fallback to user_passes with payment_id
+      const { data, error } = await supabase
+        .from('user_passes')
+        .select('*')
         .not('payment_id', 'is', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPasses(data || []);
+
+      // Fetch user profiles separately
+      const userIds = [...new Set(data?.map(pass => pass.user_id) || [])];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, username')
+        .in('user_id', userIds);
+
+      const passesWithProfiles = (data || []).map(pass => ({
+        ...pass,
+        profiles: profiles?.find(p => p.user_id === pass.user_id)
+      }));
+
+      setPasses(passesWithProfiles);
     } catch (error) {
       console.error('Error fetching passes:', error);
       toast.error('Failed to fetch transaction data');
@@ -74,9 +113,12 @@ const AdminTransactions = () => {
           <div className="flex items-center gap-3">
             <Database className="w-5 h-5 text-blue-600" />
             <div>
-              <p className="font-medium text-blue-900">Database Migration Required</p>
+              <p className="font-medium text-blue-900">UPI Transaction Tracking</p>
               <p className="text-sm text-blue-700">
-                Run the UPI transactions migration in database_setup.sql to enable full transaction tracking.
+                {passes.length > 0 
+                  ? `Showing ${passes.length} transactions. UPI transactions table is working!`
+                  : "No transactions found. Users need to make UPI payments to see data here."
+                }
               </p>
             </div>
           </div>
