@@ -46,6 +46,7 @@ interface Product {
 
 const Browse = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [priceRange, setPriceRange] = useState([0, 5000]);
   const [selectedCondition, setSelectedCondition] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -121,12 +122,14 @@ const Browse = () => {
   };
 
   const activeFilters = [
+    selectedCategory !== "all" && `Category: ${selectedCategory}`,
     selectedCondition && `Condition: ${selectedCondition}`,
     selectedSize && `Size: ${selectedSize}`,
     (priceRange[0] > 0 || priceRange[1] < 5000) && `₹${priceRange[0]} - ₹${priceRange[1]}`,
   ].filter(Boolean);
 
   const clearFilters = () => {
+    setSelectedCategory("all");
     setSelectedCondition(null);
     setSelectedSize(null);
     setPriceRange([0, 5000]);
@@ -134,6 +137,9 @@ const Browse = () => {
 
   const filteredProducts = products.filter(product => {
     if (searchQuery && !product.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+    if (selectedCategory !== "all" && product.category.toLowerCase() !== selectedCategory.toLowerCase()) {
       return false;
     }
     if (selectedCondition && product.condition !== selectedCondition) {
@@ -314,7 +320,10 @@ const Browse = () => {
             transition={{ delay: 0.3 }}
             className="mb-8"
           >
-            <CategoryPills />
+            <CategoryPills 
+              onCategoryChange={setSelectedCategory} 
+              activeCategory={selectedCategory} 
+            />
           </motion.div>
 
           {/* Products Grid */}

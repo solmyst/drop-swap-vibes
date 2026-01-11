@@ -69,26 +69,10 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/browse"
+                  to="/store"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  New Arrivals
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/browse"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Categories
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/browse"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Brands
+                  Store
                 </Link>
               </li>
             </ul>
@@ -108,26 +92,10 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/upload"
+                  to="/terms"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Seller Guidelines
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/pricing"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Pricing Tips
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/browse"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Success Stories
                 </Link>
               </li>
               <li>
