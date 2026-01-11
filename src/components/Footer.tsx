@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Instagram, Twitter, Youtube, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
 import { ASSETS } from "@/lib/assets";
 
 const Footer = () => {
@@ -27,10 +28,15 @@ const Footer = () => {
               The marketplace for pre-loved fashion. Drip different, shop sustainable.
             </p>
             <div className="flex gap-2">
-              {[Instagram, Twitter, Youtube].map((Icon, i) => (
+              {[
+                { Icon: Instagram, href: "#", label: "Instagram" },
+                { Icon: Twitter, href: "#", label: "Twitter" },
+                { Icon: Youtube, href: "#", label: "YouTube" }
+              ].map(({ Icon, href, label }, i) => (
                 <motion.a
                   key={i}
-                  href="#"
+                  href={href}
+                  aria-label={label}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   className="w-10 h-10 rounded-full glass flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
@@ -45,18 +51,46 @@ const Footer = () => {
           <div>
             <h4 className="font-display font-semibold mb-4">Shop</h4>
             <ul className="space-y-2">
-              {["Browse All", "Trending", "New Arrivals", "Categories", "Brands"].map(
-                (link) => (
-                  <li key={link}>
-                    <a
-                      href="#"
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {link}
-                    </a>
-                  </li>
-                )
-              )}
+              <li>
+                <Link
+                  to="/browse"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Browse All
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/browse"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Trending
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/browse"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  New Arrivals
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/browse"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Categories
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/browse"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Brands
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -64,18 +98,46 @@ const Footer = () => {
           <div>
             <h4 className="font-display font-semibold mb-4">Sell</h4>
             <ul className="space-y-2">
-              {["Start Selling", "Seller Guidelines", "Pricing Tips", "Success Stories", "Seller Pass"].map(
-                (link) => (
-                  <li key={link}>
-                    <a
-                      href="#"
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {link}
-                    </a>
-                  </li>
-                )
-              )}
+              <li>
+                <Link
+                  to="/upload"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Start Selling
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/upload"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Seller Guidelines
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/pricing"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Pricing Tips
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/browse"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Success Stories
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/pricing"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Seller Pass
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -104,15 +166,24 @@ const Footer = () => {
             © 2025 रीवस्त्र. Made with 💚 for sustainable fashion.
           </p>
           <div className="flex gap-6">
-            {["Privacy", "Terms", "Support"].map((link) => (
-              <a
-                key={link}
-                href="#"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {link}
-              </a>
-            ))}
+            <Link
+              to="/store"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Privacy
+            </Link>
+            <Link
+              to="/store"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Terms
+            </Link>
+            <Link
+              to="/messages"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Support
+            </Link>
           </div>
         </div>
       </div>
