@@ -132,7 +132,7 @@ const UpiPaymentModal = ({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Note:</span>
-                <span>रविस्त्र {passType.replace('_', ' ').toUpperCase()} Pass</span>
+                <span>रीवस्त्र {passType.replace('_', ' ').toUpperCase()} Pass</span>
               </div>
             </div>
 

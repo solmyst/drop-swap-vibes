@@ -18,7 +18,7 @@ export default AboutSection;
 //     {
 //       icon: Recycle,
 //       title: "Circular Economy",
-//       description: "Every purchase and sale on रविस्त्र contributes to a more sustainable and circular fashion ecosystem."
+//       description: "Every purchase and sale on रीवस्त्र contributes to a more sustainable and circular fashion ecosystem."
 //     },
 //     {
 //       icon: Users,
@@ -42,10 +42,10 @@ export default AboutSection;
 //           className="text-center max-w-3xl mx-auto mb-12"
 //         >
 //           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
-//             About <span className="text-gradient">रविस्त्र</span>
+//             About <span className="text-gradient">रीवस्त्र</span>
 //           </h2>
 //           <p className="text-muted-foreground text-lg leading-relaxed">
-//             रविस्त्र is India's premier marketplace for pre-loved fashion. We're on a mission to make 
+//             रीवस्त्र is India's premier marketplace for pre-loved fashion. We're on a mission to make 
 //             sustainable fashion accessible, affordable, and stylish. Our platform connects conscious 
 //             buyers with sellers who believe in giving their clothes a second chance to shine.
 //           </p>
@@ -79,7 +79,7 @@ export default AboutSection;
 //           <h3 className="font-display text-2xl font-bold mb-4">Our Vision</h3>
 //           <p className="text-muted-foreground text-lg leading-relaxed">
 //             We envision a world where fashion is circular, sustainable, and accessible to everyone. 
-//             Through रविस्त्र, we're building a community that values quality over quantity, 
+//             Through रीवस्त्र, we're building a community that values quality over quantity, 
 //             sustainability over fast fashion, and authentic connections over anonymous transactions.
 //           </p>
 //           <div className="flex flex-wrap justify-center gap-4 mt-6">

@@ -1,4 +1,4 @@
--- Apply missing database functions for रविस्त्र marketplace
+-- Apply missing database functions for रीवस्त्र marketplace
 
 -- Function to get chat limit based on pass type
 CREATE OR REPLACE FUNCTION public.get_user_chat_limit(user_id_param UUID)

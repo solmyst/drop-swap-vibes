@@ -239,7 +239,7 @@ const Pricing = () => {
             transition={{ delay: 0.3 }}
             className="glass rounded-3xl p-8 text-center max-w-3xl mx-auto mt-16"
           >
-            <h3 className="font-display text-xl font-bold mb-6">Why Choose रविस्त्र?</h3>
+            <h3 className="font-display text-xl font-bold mb-6">Why Choose रीवस्त्र?</h3>
             <div className="grid grid-cols-3 gap-6">
               <div className="flex flex-col items-center">
                 <Shield className="w-8 h-8 text-primary mb-2" />

@@ -99,12 +99,12 @@ const AdminDashboard = () => {
               <div className="w-10 h-10 rounded-xl flex items-center justify-center">
                 <img 
                   src={ASSETS.logo} 
-                  alt="रविस्त्र Logo" 
+                  alt="रीवस्त्र Logo" 
                   className="w-10 h-10"
                 />
               </div>
               <span className="font-display font-bold text-xl">
-                <span className="text-gradient">रविस्त्र</span>
+                <span className="text-gradient">रीवस्त्र</span>
                 Admin <span className="text-gradient">Panel</span>
               </span>
             </Link>

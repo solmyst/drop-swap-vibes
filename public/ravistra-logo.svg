@@ -20,8 +20,8 @@
     <path d="M-2,0 L32,0 M-2,30 L32,30 M0,-2 L0,32 M30,-2 L30,32" stroke="#8B4A47" stroke-width="1" stroke-dasharray="2,2"/>
   </g>
   
-  <!-- Main text "रविस्त्र" -->
-  <text x="100" y="120" font-family="serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#4A5D3A">रविस्त्र</text>
+  <!-- Main text "रीवस्त्र" -->
+  <text x="100" y="120" font-family="serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#4A5D3A">रीवस्त्र</text>
   
   <!-- Bottom fabric patches -->
   <g transform="translate(40, 140)">

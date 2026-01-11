@@ -15,12 +15,12 @@ const Footer = () => {
               <div className="w-10 h-10 rounded-xl flex items-center justify-center">
                 <img 
                   src={ASSETS.logo} 
-                  alt="रविस्त्र Logo" 
+                  alt="रीवस्त्र Logo" 
                   className="w-10 h-10"
                 />
               </div>
               <span className="font-display font-bold text-xl">
-                <span className="text-gradient">रविस्त्र</span>
+                <span className="text-gradient">रीवस्त्र</span>
               </span>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
@@ -101,7 +101,7 @@ const Footer = () => {
         {/* Bottom */}
         <div className="pt-8 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            © 2025 रविस्त्र. Made with 💚 for sustainable fashion.
+            © 2025 रीवस्त्र. Made with 💚 for sustainable fashion.
           </p>
           <div className="flex gap-6">
             {["Privacy", "Terms", "Support"].map((link) => (

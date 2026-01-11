@@ -1,4 +1,4 @@
-# UPI Payment Setup Instructions for रविस्त्र
+# UPI Payment Setup Instructions for रीवस्त्र
 
 ## Quick Setup
 

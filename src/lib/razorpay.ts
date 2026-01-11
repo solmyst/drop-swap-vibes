@@ -61,7 +61,7 @@ export const initializeRazorpayPayment = (
     key: RAZORPAY_KEY_ID,
     amount: order.amount,
     currency: order.currency,
-    name: 'रविस्त्र',
+    name: 'रीवस्त्र',
     description: `${passType.replace('_', ' ').toUpperCase()} Pass`,
     order_id: order.id,
     handler: onSuccess,

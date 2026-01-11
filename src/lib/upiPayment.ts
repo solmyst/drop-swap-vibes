@@ -12,13 +12,13 @@ export const UPI_ID = import.meta.env.VITE_UPI_ID || 'yourname@paytm'; // Replac
 
 // Generate UPI deep link
 export const generateUpiLink = (amount: number, passType: PassType, userId: string): string => {
-  const transactionNote = `रविस्त्र ${passType.replace('_', ' ').toUpperCase()} Pass`;
+  const transactionNote = `रीवस्त्र ${passType.replace('_', ' ').toUpperCase()} Pass`;
   const transactionRef = `TH_${passType}_${userId.slice(0, 8)}_${Date.now()}`;
   
   // UPI deep link format
   const upiParams = new URLSearchParams({
     pa: UPI_ID, // Payee address (your UPI ID)
-    pn: 'रविस्त्र', // Payee name
+    pn: 'रीवस्त्र', // Payee name
     am: amount.toString(), // Amount
     cu: 'INR', // Currency
     tn: transactionNote, // Transaction note

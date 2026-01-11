@@ -37,7 +37,7 @@ const Auth = () => {
         }
         const { error } = await signUp(email, password, username);
         if (error) throw error;
-        toast.success("Account created! Welcome to रविस्त्र! 🛍️");
+        toast.success("Account created! Welcome to रीवस्त्र! 🛍️");
         navigate("/");
       }
     } catch (error: unknown) {
@@ -72,12 +72,12 @@ const Auth = () => {
           <div className="w-12 h-12 rounded-xl flex items-center justify-center">
             <img 
               src={ASSETS.logo} 
-              alt="रविस्त्र Logo" 
+              alt="रीवस्त्र Logo" 
               className="w-12 h-12"
             />
           </div>
           <span className="font-display font-bold text-2xl">
-            <span className="text-gradient">रविस्त्र</span>
+            <span className="text-gradient">रीवस्त्र</span>
           </span>
         </div>
 
@@ -103,7 +103,7 @@ const Auth = () => {
                   <Input
                     id="username"
                     type="text"
-                    placeholder="ravistra_user"
+                    placeholder="reevastra_user"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="h-12 pl-12 bg-muted border-0 rounded-xl"
@@ -172,7 +172,7 @@ const Auth = () => {
 
           <div className="mt-6 text-center">
             <p className="text-muted-foreground">
-              {isLogin ? "New to रविस्त्र?" : "Already have an account?"}{" "}
+              {isLogin ? "New to रीवस्त्र?" : "Already have an account?"}{" "}
               <button
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-primary font-semibold hover:underline"

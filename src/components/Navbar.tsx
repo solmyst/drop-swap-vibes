@@ -39,12 +39,12 @@ const Navbar = () => {
             >
               <img 
                 src={ASSETS.logo} 
-                alt="रविस्त्र Logo" 
+                alt="रीवस्त्र Logo" 
                 className="w-10 h-10"
               />
             </motion.div>
             <span className="font-display font-bold text-xl hidden sm:block">
-              <span className="text-gradient">रविस्त्र</span>
+              <span className="text-gradient">रीवस्त्र</span>
             </span>
           </Link>
 
