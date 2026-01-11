@@ -24,13 +24,16 @@ import AdminTransactions from "./pages/admin/AdminTransactions";
 
 const queryClient = new QueryClient();
 
+// Get the base path for GitHub Pages
+const basename = import.meta.env.MODE === 'production' ? '/drop-swap-vibes' : '';
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename={basename}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/browse" element={<Browse />} />
