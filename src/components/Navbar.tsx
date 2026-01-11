@@ -4,6 +4,7 @@ import { Search, Heart, MessageCircle, Plus, Menu, X, User, LogOut, ShoppingBag 
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { ASSETS } from "@/lib/assets";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +38,7 @@ const Navbar = () => {
               className="w-10 h-10 rounded-xl flex items-center justify-center"
             >
               <img 
-                src="/logo.svg" 
+                src={ASSETS.logo} 
                 alt="रविस्त्र Logo" 
                 className="w-10 h-10"
               />

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { ASSETS } from "@/lib/assets";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -70,7 +71,7 @@ const Auth = () => {
         <div className="flex items-center gap-3 mb-8">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center">
             <img 
-              src="/logo.svg" 
+              src={ASSETS.logo} 
               alt="रविस्त्र Logo" 
               className="w-12 h-12"
             />

@@ -9,6 +9,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ASSETS } from "@/lib/assets";
 
 const AdminDashboard = () => {
   const { isAdmin, loading } = useAdmin();
@@ -97,7 +98,7 @@ const AdminDashboard = () => {
             <Link to="/" className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center">
                 <img 
-                  src="/logo.svg" 
+                  src={ASSETS.logo} 
                   alt="रविस्त्र Logo" 
                   className="w-10 h-10"
                 />

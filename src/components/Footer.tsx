@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Instagram, Twitter, Youtube, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ASSETS } from "@/lib/assets";
 
 const Footer = () => {
   return (
@@ -13,7 +14,7 @@ const Footer = () => {
             <div className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center">
                 <img 
-                  src="/logo.svg" 
+                  src={ASSETS.logo} 
                   alt="रविस्त्र Logo" 
                   className="w-10 h-10"
                 />
