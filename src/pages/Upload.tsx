@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/useAuth";
-import { usePassBenefits } from "@/hooks/usePassBenefits";
+// import { usePassBenefits } from "@/hooks/usePassBenefits"; // COMMENTED OUT - Pass system disabled
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -27,7 +27,7 @@ const conditions = ["New with Tags", "Like New", "Good", "Fair"];
 
 const Upload = () => {
   const { user, loading: authLoading } = useAuth();
-  const { benefits, canCreateListing, getRemainingListings, incrementListingUsage } = usePassBenefits();
+  // const { benefits, canCreateListing, getRemainingListings, incrementListingUsage } = usePassBenefits(); // COMMENTED OUT - Pass system disabled
   const navigate = useNavigate();
   const [images, setImages] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -90,11 +90,12 @@ const Upload = () => {
       return;
     }
 
-    if (!canCreateListing()) {
-      toast.error('You have reached your listing limit. Upgrade your pass to list more items!');
-      navigate('/pricing');
-      return;
-    }
+    // COMMENTED OUT - Pass system disabled
+    // if (!canCreateListing()) {
+    //   toast.error('You have reached your listing limit. Upgrade your pass to list more items!');
+    //   navigate('/pricing');
+    //   return;
+    // }
 
     if (!title || !category || !size || !condition || !price || images.length === 0) {
       toast.error('Please fill in all required fields');
@@ -106,22 +107,23 @@ const Upload = () => {
     try {
       console.log('Creating listing for user:', user.id);
       
-      // Ensure user has usage record
-      const { data: existingUsage } = await supabase
-        .from('user_usage')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // COMMENTED OUT - Pass system disabled
+      // // Ensure user has usage record
+      // const { data: existingUsage } = await supabase
+      //   .from('user_usage')
+      //   .select('*')
+      //   .eq('user_id', user.id)
+      //   .maybeSingle();
 
-      if (!existingUsage) {
-        const { error: usageError } = await supabase
-          .from('user_usage')
-          .insert({ user_id: user.id, total_chats_started: 0, total_listings_created: 0 });
+      // if (!existingUsage) {
+      //   const { error: usageError } = await supabase
+      //     .from('user_usage')
+      //     .insert({ user_id: user.id, total_chats_started: 0, total_listings_created: 0 });
         
-        if (usageError) {
-          console.error('Error creating usage record:', usageError);
-        }
-      }
+      //   if (usageError) {
+      //     console.error('Error creating usage record:', usageError);
+      //   }
+      // }
 
       // Upload images to storage
       const uploadedImageUrls = await uploadImages();
@@ -146,11 +148,12 @@ const Upload = () => {
 
       if (error) {
         console.error('Database insert error:', error);
-        if (error.message.includes('row-level security') || error.message.includes('policy')) {
-          toast.error('You have reached your listing limit. Upgrade your pass to list more!');
-          navigate('/pricing');
-          return;
-        }
+        // COMMENTED OUT - Pass system disabled
+        // if (error.message.includes('row-level security') || error.message.includes('policy')) {
+        //   toast.error('You have reached your listing limit. Upgrade your pass to list more!');
+        //   navigate('/pricing');
+        //   return;
+        // }
         if (error.message.includes('authentication')) {
           toast.error('Please log in to create a listing');
           navigate('/auth');
@@ -161,8 +164,9 @@ const Upload = () => {
         return;
       }
 
-      // Update usage count using the hook
-      await incrementListingUsage();
+      // COMMENTED OUT - Pass system disabled
+      // // Update usage count using the hook
+      // await incrementListingUsage();
 
       toast.success(isDraft ? 'Draft saved!' : 'Listing published! 🎉');
       navigate('/profile');
@@ -188,8 +192,9 @@ const Upload = () => {
       <Navbar />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">
+          {/* COMMENTED OUT - Pass system disabled */}
           {/* Listing Limit Warning */}
-          {!canCreateListing() && (
+          {/* {!canCreateListing() && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -208,10 +213,11 @@ const Upload = () => {
                 </AlertDescription>
               </Alert>
             </motion.div>
-          )}
+          )} */}
 
+          {/* COMMENTED OUT - Pass system disabled */}
           {/* Listing Quota Display */}
-          {canCreateListing() && !benefits.hasUnlimitedListings && (
+          {/* {canCreateListing() && !benefits.hasUnlimitedListings && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -226,7 +232,7 @@ const Upload = () => {
                 </Link>
               </div>
             </motion.div>
-          )}
+          )} */}
 
           {/* Header */}
           <motion.div

@@ -2,7 +2,7 @@ import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import FeaturedSection from "@/components/FeaturedSection";
 import CategoryPills from "@/components/CategoryPills";
-import PassSection from "@/components/PassSection";
+// import PassSection from "@/components/PassSection"; // COMMENTED OUT - Pass system disabled
 import ImpactSection from "@/components/ImpactSection";
 import AboutSection from "@/components/AboutSection";
 import CTASection from "@/components/CTASection";
@@ -17,7 +17,7 @@ const Index = () => {
         <FeaturedSection />
         <CategoryPills />
         <ImpactSection />
-        <PassSection />
+        {/* <PassSection /> */} {/* COMMENTED OUT - Pass system disabled */}
         <AboutSection />
         <CTASection />
       </main>

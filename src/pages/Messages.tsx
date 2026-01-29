@@ -153,18 +153,19 @@ const Messages = () => {
   const createNewConversation = async (sellerId: string, listingId: string) => {
     if (!user) return;
 
-    // First ensure user has usage record
-    const { data: existingUsage } = await supabase
-      .from('user_usage')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle();
+    // COMMENTED OUT - Pass system disabled
+    // // First ensure user has usage record
+    // const { data: existingUsage } = await supabase
+    //   .from('user_usage')
+    //   .select('*')
+    //   .eq('user_id', user.id)
+    //   .maybeSingle();
 
-    if (!existingUsage) {
-      await supabase
-        .from('user_usage')
-        .insert({ user_id: user.id, total_chats_started: 0, total_listings_created: 0 });
-    }
+    // if (!existingUsage) {
+    //   await supabase
+    //     .from('user_usage')
+    //     .insert({ user_id: user.id, total_chats_started: 0, total_listings_created: 0 });
+    // }
 
     const { data, error } = await supabase
       .from('conversations')
@@ -180,20 +181,22 @@ const Messages = () => {
       .single();
 
     if (error) {
-      if (error.message.includes('row-level security')) {
-        toast.error('You have reached your chat limit. Upgrade your pass to chat with more sellers!');
-        navigate('/pricing');
-      } else {
+      // COMMENTED OUT - Pass system disabled
+      // if (error.message.includes('row-level security')) {
+      //   toast.error('You have reached your chat limit. Upgrade your pass to chat with more sellers!');
+      //   navigate('/pricing');
+      // } else {
         toast.error('Failed to start conversation');
-      }
+      // }
       return;
     }
 
-    // Update usage count
-    await supabase
-      .from('user_usage')
-      .update({ total_chats_started: (existingUsage?.total_chats_started || 0) + 1 })
-      .eq('user_id', user.id);
+    // COMMENTED OUT - Pass system disabled
+    // // Update usage count
+    // await supabase
+    //   .from('user_usage')
+    //   .update({ total_chats_started: (existingUsage?.total_chats_started || 0) + 1 })
+    //   .eq('user_id', user.id);
 
     const { data: profile } = await supabase
       .from('profiles')

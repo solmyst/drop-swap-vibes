@@ -98,14 +98,15 @@ const Footer = () => {
                   Seller Guidelines
                 </Link>
               </li>
-              <li>
+              {/* COMMENTED OUT - Pass system disabled */}
+              {/* <li>
                 <Link
                   to="/pricing"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Seller Pass
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </div>
 

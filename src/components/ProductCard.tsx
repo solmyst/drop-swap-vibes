@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { usePassBenefits } from "@/hooks/usePassBenefits";
+// import { usePassBenefits } from "@/hooks/usePassBenefits"; // COMMENTED OUT - Pass system disabled
 import { toast } from "sonner";
 
 interface ProductCardProps {
@@ -48,7 +48,7 @@ const ProductCard = ({
   const [isLiked, setIsLiked] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const { user } = useAuth();
-  const { benefits, canStartChat } = usePassBenefits();
+  // const { benefits, canStartChat } = usePassBenefits(); // COMMENTED OUT - Pass system disabled
   const navigate = useNavigate();
 
   const discount = originalPrice
@@ -84,12 +84,13 @@ const ProductCard = ({
       return;
     }
 
-    // Check if user can start chat based on their pass
-    if (!canStartChat()) {
-      toast.error('Chat limit reached! Upgrade your pass to chat with more sellers.');
-      navigate('/pricing');
-      return;
-    }
+    // COMMENTED OUT - Pass system disabled, allow unlimited chats
+    // // Check if user can start chat based on their pass
+    // if (!canStartChat()) {
+    //   toast.error('Chat limit reached! Upgrade your pass to chat with more sellers.');
+    //   navigate('/pricing');
+    //   return;
+    // }
 
     // Navigate to messages with this product
     navigate(`/messages?product=${id}`);
