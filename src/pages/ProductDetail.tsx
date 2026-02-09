@@ -12,7 +12,7 @@ import ReviewModal from "@/components/ReviewModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { usePassBenefits } from "@/hooks/usePassBenefits";
+// import { usePassBenefits } from "@/hooks/usePassBenefits"; // COMMENTED OUT - Pass system removed
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -61,7 +61,7 @@ const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { benefits } = usePassBenefits();
+  // const { benefits } = usePassBenefits(); // COMMENTED OUT - Pass system removed
   const [currentImage, setCurrentImage] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
@@ -72,9 +72,11 @@ const ProductDetail = () => {
   const [recommendationType, setRecommendationType] = useState<'category' | 'price'>('category');
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
-  // Check if user has any buyer pass or is the seller
-  const hasBuyerPass = benefits.currentPass !== 'free' && 
-    (benefits.currentPass.includes('buyer') || benefits.currentPass.includes('seller'));
+  // COMMENTED OUT - Pass system removed - Show seller details to everyone
+  // // Check if user has any buyer pass or is the seller
+  // const hasBuyerPass = benefits.currentPass !== 'free' && 
+  //   (benefits.currentPass.includes('buyer') || benefits.currentPass.includes('seller'));
+  const hasBuyerPass = true; // Always true - no pass required
   
   const isOwner = user?.id === product?.seller_id;
 
@@ -252,9 +254,10 @@ const ProductDetail = () => {
       return;
     }
     if (!hasBuyerPass) {
-      toast.error('Buy a pass to chat with sellers');
-      navigate('/pricing');
-      return;
+      // COMMENTED OUT - Pass system removed - Chat is free for everyone
+      // toast.error('Buy a pass to chat with sellers');
+      // navigate('/pricing');
+      // return;
     }
     navigate(`/messages?seller=${product.seller_id}&listing=${product.id}`);
   };
@@ -271,11 +274,12 @@ const ProductDetail = () => {
       return;
     }
     
-    if (!hasBuyerPass) {
-      toast.error('Upgrade to a buyer pass to view seller details');
-      navigate('/pricing');
-      return;
-    }
+    // COMMENTED OUT - Pass system removed - Seller details are free for everyone
+    // if (!hasBuyerPass) {
+    //   toast.error('Upgrade to a buyer pass to view seller details');
+    //   navigate('/pricing');
+    //   return;
+    // }
     
     setShowSellerDetails(!showSellerDetails);
   };
@@ -430,7 +434,7 @@ const ProductDetail = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold">
-                        {showSellerDetails || isOwner ? product.seller.username : maskText(product.seller.username, 3)}
+                        { product.seller.username}
                       </span>
                       {product.seller.is_verified && (
                         <Verified className="w-4 h-4 text-primary" />
@@ -443,7 +447,7 @@ const ProductDetail = () => {
                       </div>
                     )}
                   </div>
-                  <Button 
+                  {/* <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={handleViewSellerDetails}
@@ -474,7 +478,7 @@ const ProductDetail = () => {
                         </>
                       )
                     )}
-                  </Button>
+                  </Button> */}
                 </div>
 
                 {/* Additional seller details when unmasked */}
@@ -499,22 +503,24 @@ const ProductDetail = () => {
                       </div>
                     )}
                     
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    {/* COMMENTED OUT - Pass system removed */}
+                    {/* <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Crown className="w-3 h-3 text-primary" />
                       {isOwner ? 'Your seller profile' : 'Seller details unlocked with your pass'}
-                    </div>
+                    </div> */}
                   </motion.div>
                 )}
 
+                {/* COMMENTED OUT - Pass system removed */}
                 {/* Pass required message when masked */}
-                {!showSellerDetails && !hasBuyerPass && !isOwner && user && (
+                {/* {!showSellerDetails && !hasBuyerPass && !isOwner && user && (
                   <div className="mt-4 pt-4 border-t border-border">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Lock className="w-3 h-3" />
                       Upgrade to a buyer pass to view seller details
                     </div>
                   </div>
-                )}
+                )} */}
               </div>
 
               {/* Description */}
@@ -537,17 +543,18 @@ const ProductDetail = () => {
                     className="w-full gap-2"
                     onClick={handleChat}
                   >
-                    {hasBuyerPass || !user ? (
+                    {/* COMMENTED OUT - Pass system removed - Chat is always free */}
+                    {/* {hasBuyerPass || !user ? ( */}
                       <>
                         <MessageCircle className="w-5 h-5" />
                         Chat with Seller
                       </>
-                    ) : (
+                    {/* ) : (
                       <>
                         <Lock className="w-5 h-5" />
                         Unlock Chat - Buy Pass
                       </>
-                    )}
+                    )} */}
                   </Button>
                 )}
                 

@@ -1,21 +1,20 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Edit2, MapPin, Calendar, Star, Package, Heart, MessageCircle, Verified, Share2, LogOut, Crown, TrendingUp, ArrowUp } from "lucide-react";
+import { Edit2, MapPin, Calendar, Star, Package, Heart, MessageCircle, Verified, Share2, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import EditListingModal from "@/components/EditListingModal";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
-import { usePassBenefits } from "@/hooks/usePassBenefits";
+// import { usePassBenefits } from "@/hooks/usePassBenefits"; // COMMENTED OUT - Pass system removed
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SellerReviews from "@/components/SellerReviews";
-import { getPassDetails, PassType } from "@/components/PassCard";
-import PassStatus from "@/components/PassStatus";
+// import { getPassDetails, PassType } from "@/components/PassCard"; // COMMENTED OUT - Pass system removed
+// import PassStatus from "@/components/PassStatus"; // COMMENTED OUT - Pass system removed
 import { Link } from "react-router-dom";
 
 interface Listing {
@@ -41,26 +40,27 @@ interface Profile {
   created_at: string;
 }
 
-interface UserPass {
-  id: string;
-  pass_type: PassType;
-  expires_at: string;
-  is_active: boolean;
-}
+// COMMENTED OUT - Pass system removed
+// interface UserPass {
+//   id: string;
+//   pass_type: PassType;
+//   expires_at: string;
+//   is_active: boolean;
+// }
 
-interface UserUsage {
-  total_chats_started: number;
-  total_listings_created: number;
-}
+// interface UserUsage {
+//   total_chats_started: number;
+//   total_listings_created: number;
+// }
 
 const Profile = () => {
   const { user, loading: authLoading, signOut } = useAuth();
-  const { benefits, usage: hookUsage } = usePassBenefits();
+  // const { benefits, usage: hookUsage } = usePassBenefits(); // COMMENTED OUT - Pass system removed
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
-  const [userPass, setUserPass] = useState<UserPass | null>(null);
-  const [localUsage, setLocalUsage] = useState<UserUsage | null>(null);
+  // const [userPass, setUserPass] = useState<UserPass | null>(null); // COMMENTED OUT - Pass system removed
+  // const [localUsage, setLocalUsage] = useState<UserUsage | null>(null); // COMMENTED OUT - Pass system removed
   const [wishlistCount, setWishlistCount] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -82,8 +82,8 @@ const Profile = () => {
     await Promise.all([
       fetchProfile(),
       fetchListings(),
-      fetchUserPass(),
-      fetchUsage(),
+      // fetchUserPass(), // COMMENTED OUT - Pass system removed
+      // fetchUsage(), // COMMENTED OUT - Pass system removed
       fetchCounts(),
     ]);
     setLoading(false);
@@ -113,33 +113,34 @@ const Profile = () => {
     }
   };
 
-  const fetchUserPass = async () => {
-    const { data } = await supabase
-      .from('user_passes')
-      .select('*')
-      .eq('user_id', user!.id)
-      .eq('is_active', true)
-      .gte('expires_at', new Date().toISOString())
-      .order('expires_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+  // COMMENTED OUT - Pass system removed
+  // const fetchUserPass = async () => {
+  //   const { data } = await supabase
+  //     .from('user_passes')
+  //     .select('*')
+  //     .eq('user_id', user!.id)
+  //     .eq('is_active', true)
+  //     .gte('expires_at', new Date().toISOString())
+  //     .order('expires_at', { ascending: false })
+  //     .limit(1)
+  //     .maybeSingle();
 
-    if (data) {
-      setUserPass(data as unknown as UserPass);
-    }
-  };
+  //   if (data) {
+  //     setUserPass(data as unknown as UserPass);
+  //   }
+  // };
 
-  const fetchUsage = async () => {
-    const { data } = await supabase
-      .from('user_usage')
-      .select('*')
-      .eq('user_id', user!.id)
-      .maybeSingle();
+  // const fetchUsage = async () => {
+  //   const { data } = await supabase
+  //     .from('user_usage')
+  //     .select('*')
+  //     .eq('user_id', user!.id)
+  //     .maybeSingle();
 
-    if (data) {
-      setLocalUsage(data);
-    }
-  };
+  //   if (data) {
+  //     setLocalUsage(data);
+  //   }
+  // };
 
   const fetchCounts = async () => {
     // Wishlist count
@@ -213,46 +214,47 @@ const Profile = () => {
     return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   };
 
-  const currentPassDetails = userPass ? getPassDetails(userPass.pass_type) : null;
+  // COMMENTED OUT - Pass system removed
+  // const currentPassDetails = userPass ? getPassDetails(userPass.pass_type) : null;
 
-  // Calculate remaining limits
-  const chatLimit = userPass?.pass_type === 'buyer_pro' || userPass?.pass_type?.startsWith('seller_') ? -1 : 
-                   userPass?.pass_type === 'buyer_basic' ? 8 :
-                   userPass?.pass_type === 'buyer_starter' ? 2 : 2;
-  const listingLimit = userPass?.pass_type === 'seller_pro' ? -1 :
-                       userPass?.pass_type === 'seller_basic' ? 25 :
-                       userPass?.pass_type === 'seller_starter' ? 10 : 3;
+  // // Calculate remaining limits
+  // const chatLimit = userPass?.pass_type === 'buyer_pro' || userPass?.pass_type?.startsWith('seller_') ? -1 : 
+  //                  userPass?.pass_type === 'buyer_basic' ? 8 :
+  //                  userPass?.pass_type === 'buyer_starter' ? 2 : 2;
+  // const listingLimit = userPass?.pass_type === 'seller_pro' ? -1 :
+  //                      userPass?.pass_type === 'seller_basic' ? 25 :
+  //                      userPass?.pass_type === 'seller_starter' ? 10 : 3;
 
-  const chatsUsed = localUsage?.total_chats_started || 0;
-  const listingsCreated = listings.length;
+  // const chatsUsed = localUsage?.total_chats_started || 0;
+  // const listingsCreated = listings.length;
 
-  // Determine if user can upgrade and get upgrade message
-  const canUpgrade = () => {
-    const currentPass = benefits.currentPass;
-    if (currentPass === 'free') return true;
-    if (currentPass === 'buyer_starter') return true;
-    if (currentPass === 'buyer_basic') return true;
-    if (currentPass === 'seller_starter') return true;
-    if (currentPass === 'seller_basic') return true;
-    return false; // seller_pro and buyer_pro are highest tiers
-  };
+  // // Determine if user can upgrade and get upgrade message
+  // const canUpgrade = () => {
+  //   const currentPass = benefits.currentPass;
+  //   if (currentPass === 'free') return true;
+  //   if (currentPass === 'buyer_starter') return true;
+  //   if (currentPass === 'buyer_basic') return true;
+  //   if (currentPass === 'seller_starter') return true;
+  //   if (currentPass === 'seller_basic') return true;
+  //   return false; // seller_pro and buyer_pro are highest tiers
+  // };
 
-  const getUpgradeMessage = () => {
-    const currentPass = benefits.currentPass;
-    if (currentPass === 'free') return "Unlock premium features and grow your thrift business!";
-    if (currentPass === 'buyer_starter') return "Get more chats or try seller passes for unlimited listings!";
-    if (currentPass === 'buyer_basic') return "Upgrade to Pro for unlimited chats or try seller passes!";
-    if (currentPass === 'seller_starter') return "Get more listings and a verified badge!";
-    if (currentPass === 'seller_basic') return "Unlock unlimited listings and priority search!";
-    return "";
-  };
+  // const getUpgradeMessage = () => {
+  //   const currentPass = benefits.currentPass;
+  //   if (currentPass === 'free') return "Unlock premium features and grow your thrift business!";
+  //   if (currentPass === 'buyer_starter') return "Get more chats or try seller passes for unlimited listings!";
+  //   if (currentPass === 'buyer_basic') return "Upgrade to Pro for unlimited chats or try seller passes!";
+  //   if (currentPass === 'seller_starter') return "Get more listings and a verified badge!";
+  //   if (currentPass === 'seller_basic') return "Unlock unlimited listings and priority search!";
+  //   return "";
+  // };
 
-  const shouldShowUpgradeCTA = () => {
-    // Show upgrade CTA if user can upgrade OR if they're hitting limits
-    return canUpgrade() || 
-           (!benefits.hasUnlimitedChats && hookUsage && hookUsage.chatsUsed >= benefits.chatLimit * 0.8) ||
-           (!benefits.hasUnlimitedListings && hookUsage && hookUsage.listingsUsed >= benefits.listingLimit * 0.8);
-  };
+  // const shouldShowUpgradeCTA = () => {
+  //   // Show upgrade CTA if user can upgrade OR if they're hitting limits
+  //   return canUpgrade() || 
+  //          (!benefits.hasUnlimitedChats && hookUsage && hookUsage.chatsUsed >= benefits.chatLimit * 0.8) ||
+  //          (!benefits.hasUnlimitedListings && hookUsage && hookUsage.listingsUsed >= benefits.listingLimit * 0.8);
+  // };
 
   return (
     <div className="min-h-screen bg-background dark">
@@ -327,8 +329,9 @@ const Profile = () => {
                   )}
                 </div>
 
+                {/* COMMENTED OUT - Pass system removed */}
                 {/* Current Pass Display */}
-                {currentPassDetails && (
+                {/* {currentPassDetails && (
                   <div className="mt-4 flex items-center gap-3">
                     <Badge className="bg-primary/10 text-primary border-primary/20 gap-1">
                       <Crown className="w-3 h-3" />
@@ -339,10 +342,10 @@ const Profile = () => {
                       Listings: {listingLimit === -1 ? 'Unlimited' : `${listingsCreated}/${listingLimit}`}
                     </div>
                   </div>
-                )}
+                )} */}
 
                 {/* Upgrade CTA */}
-                {shouldShowUpgradeCTA() && (
+                {/* {shouldShowUpgradeCTA() && (
                   <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -374,7 +377,7 @@ const Profile = () => {
                       </Link>
                     </div>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
 
@@ -412,10 +415,11 @@ const Profile = () => {
                 <TabsTrigger value="sold" className="rounded-lg">
                   Sold ({soldListings.length})
                 </TabsTrigger>
-                <TabsTrigger value="pass" className="rounded-lg">
+                {/* COMMENTED OUT - Pass system removed */}
+                {/* <TabsTrigger value="pass" className="rounded-lg">
                   <Crown className="w-4 h-4 mr-1" />
                   My Pass
-                </TabsTrigger>
+                </TabsTrigger> */}
                 <TabsTrigger value="reviews" className="rounded-lg">
                   Reviews ({reviewCount})
                 </TabsTrigger>
@@ -550,9 +554,10 @@ const Profile = () => {
                 )}
               </TabsContent>
 
-              <TabsContent value="pass">
+              {/* COMMENTED OUT - Pass system removed */}
+              {/* <TabsContent value="pass">
                 <PassStatus />
-              </TabsContent>
+              </TabsContent> */}
 
               <TabsContent value="reviews">
                 <SellerReviews sellerId={user?.id || ''} />
