@@ -1,5 +1,4 @@
 import Navbar from "@/components/Navbar";
-import BottomNav from "@/components/BottomNav";
 import Hero from "@/components/Hero";
 import FeaturedSection from "@/components/FeaturedSection";
 import CTASection from "@/components/CTASection";
@@ -9,13 +8,12 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background dark">
       <Navbar />
-      <main className="pb-20 md:pb-0">
+      <main>
         <Hero />
         <FeaturedSection />
         <CTASection />
       </main>
       <Footer />
-      <BottomNav />
     </div>
   );
 };
