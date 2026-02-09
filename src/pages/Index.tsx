@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import BottomNav from "@/components/BottomNav";
 import Hero from "@/components/Hero";
 import FeaturedSection from "@/components/FeaturedSection";
 import CTASection from "@/components/CTASection";
@@ -14,6 +15,7 @@ const Index = () => {
         <CTASection />
       </main>
       <Footer />
+      <BottomNav />
     </div>
   );
 };
