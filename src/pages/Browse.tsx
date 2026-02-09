@@ -5,7 +5,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import CategoryPills from "@/components/CategoryPills";
-import AtmosphericLayer from "@/components/AtmosphericLayer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -170,10 +169,7 @@ const Browse = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background dark relative">
-      {/* Atmospheric layer */}
-      <AtmosphericLayer variant="section" />
-      
+    <div className="min-h-screen bg-background dark">
       <Navbar />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">

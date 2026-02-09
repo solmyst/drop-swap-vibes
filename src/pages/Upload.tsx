@@ -4,7 +4,6 @@ import { X, Plus, Sparkles, CheckCircle, AlertTriangle, Crown } from "lucide-rea
 import { useNavigate, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import AtmosphericLayer from "@/components/AtmosphericLayer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -189,10 +188,7 @@ const Upload = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background dark relative">
-      {/* Atmospheric layer */}
-      <AtmosphericLayer variant="section" />
-      
+    <div className="min-h-screen bg-background dark">
       <Navbar />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">
