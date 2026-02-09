@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { ASSETS } from "@/lib/assets";
 import { supabase } from "@/integrations/supabase/client";
+import AtmosphericLayer from "@/components/AtmosphericLayer";
 import { indiaStates, indiaCities } from "@/data/indiaLocations";
 
 type AuthMode = 'login' | 'signup' | 'forgot-password' | 'reset-password';
@@ -287,6 +288,9 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background dark flex items-center justify-center p-4">
+      {/* Atmospheric layer */}
+      <AtmosphericLayer variant="minimal" />
+      
       {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
@@ -296,90 +300,91 @@ const Auth = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md relative z-10"
+        className={`w-full ${mode === 'signup' ? 'max-w-4xl' : 'max-w-md'} relative z-10`}
       >
         {/* Back Link */}
-        <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors">
+        <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors">
           <ArrowLeft className="w-4 h-4" />
           Back to home
         </Link>
 
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center">
             <img 
               src={ASSETS.logo} 
               alt="रीवस्त्र Logo" 
-              className="w-12 h-12"
+              className="w-10 h-10"
             />
           </div>
-          <span className="font-display font-bold text-2xl">
+          <span className="font-display font-bold text-xl">
             <span className="text-gradient">रीवस्त्र</span>
           </span>
         </div>
 
         {/* Form Card */}
-        <div className="glass rounded-3xl p-8">
-          <div className="text-center mb-8">
+        <div className="glass rounded-3xl p-6 md:p-8">
+          <div className="text-center mb-6">
             <h1 className="font-display text-2xl font-bold mb-2">
               {mode === 'login' && "Welcome back"}
               {mode === 'signup' && "Join the movement"}
               {mode === 'forgot-password' && "Reset password"}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {mode === 'login' && "Sign in to continue thrifting"}
               {mode === 'signup' && "Start your sustainable fashion journey"}
               {mode === 'forgot-password' && "Enter your email to reset your password"}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
             {mode === 'signup' && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="fullName"
-                      type="text"
-                      placeholder="Your full name"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="h-12 pl-12 bg-muted border-0 rounded-xl"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="username"
-                      type="text"
-                      placeholder="reevastra_user"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value.toLowerCase())}
-                      className="h-12 pl-12 bg-muted border-0 rounded-xl"
-                      required
-                    />
-                  </div>
-                  {username && !usernameValidation.isValid && (
-                    <div className="text-xs text-red-500 mt-1">
-                      {!usernameValidation.minLength && "Username must be at least 3 characters"}
-                      {!usernameValidation.maxLength && "Username must be less than 20 characters"}
-                      {!usernameValidation.validChars && "Only letters, numbers, and underscores allowed"}
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
+              <div className="grid md:grid-cols-2 gap-3">
+                {/* Left Column */}
+                <div className="space-y-3">
                   <div className="space-y-2">
-                    <Label htmlFor="state">State</Label>
+                    <Label htmlFor="fullName" className="text-sm">Full Name</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="fullName"
+                        type="text"
+                        placeholder="Your full name"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="h-10 pl-10 bg-muted border-0 rounded-xl text-sm"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="username" className="text-sm">Username</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="username"
+                        type="text"
+                        placeholder="reevastra_user"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                        className="h-10 pl-10 bg-muted border-0 rounded-xl text-sm"
+                        required
+                      />
+                    </div>
+                    {username && !usernameValidation.isValid && (
+                      <div className="text-xs text-red-500">
+                        {!usernameValidation.minLength && "Min 3 characters"}
+                        {!usernameValidation.maxLength && "Max 20 characters"}
+                        {!usernameValidation.validChars && "Letters, numbers, _ only"}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="state" className="text-sm">State</Label>
                     <Select value={state} onValueChange={(value) => { setState(value); setCity(""); }}>
-                      <SelectTrigger className="h-12 bg-muted border-0 rounded-xl">
+                      <SelectTrigger className="h-10 bg-muted border-0 rounded-xl text-sm">
                         <SelectValue placeholder="Select state" />
                       </SelectTrigger>
                       <SelectContent>
@@ -391,9 +396,9 @@ const Auth = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
+                    <Label htmlFor="city" className="text-sm">City</Label>
                     <Select value={city} onValueChange={setCity} disabled={!state}>
-                      <SelectTrigger className="h-12 bg-muted border-0 rounded-xl">
+                      <SelectTrigger className="h-10 bg-muted border-0 rounded-xl text-sm">
                         <SelectValue placeholder="Select city" />
                       </SelectTrigger>
                       <SelectContent>
@@ -404,78 +409,136 @@ const Auth = () => {
                     </Select>
                   </div>
                 </div>
-              </>
+
+                {/* Right Column */}
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="h-10 pl-10 bg-muted border-0 rounded-xl text-sm"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-sm">Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="h-10 pl-10 pr-10 bg-muted border-0 rounded-xl text-sm"
+                        required
+                        minLength={8}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword" className="text-sm">Confirm Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="h-10 pl-10 pr-10 bg-muted border-0 rounded-xl text-sm"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {confirmPassword && password !== confirmPassword && (
+                      <div className="text-xs text-red-500">Passwords don't match</div>
+                    )}
+                  </div>
+
+                  {password && (
+                    <div className="text-xs space-y-1">
+                      <div className={passwordValidation.minLength ? 'text-green-600' : 'text-muted-foreground'}>
+                        ✓ 8+ characters
+                      </div>
+                      <div className={passwordValidation.hasUpper && passwordValidation.hasLower ? 'text-green-600' : 'text-muted-foreground'}>
+                        ✓ Upper & lowercase
+                      </div>
+                      <div className={passwordValidation.hasNumber && passwordValidation.hasSpecial ? 'text-green-600' : 'text-muted-foreground'}>
+                        ✓ Number & special char
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 pl-12 bg-muted border-0 rounded-xl"
-                  required
-                />
-              </div>
-            </div>
-
-            {mode !== 'forgot-password' && (
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 pl-12 pr-12 bg-muted border-0 rounded-xl"
-                    required
-                    minLength={mode === 'signup' ? 8 : 6}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
+            {mode !== 'signup' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="h-10 pl-10 bg-muted border-0 rounded-xl text-sm"
+                      required
+                    />
+                  </div>
                 </div>
-                {mode === 'signup' && <PasswordStrengthIndicator password={password} />}
-              </div>
-            )}
 
-            {mode === 'signup' && (
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="h-12 pl-12 pr-12 bg-muted border-0 rounded-xl"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-                {confirmPassword && password !== confirmPassword && (
-                  <div className="text-xs text-red-500 mt-1">Passwords don't match</div>
+                {mode !== 'forgot-password' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-sm">Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="h-10 pl-10 pr-10 bg-muted border-0 rounded-xl text-sm"
+                        required
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </div>
+              </>
             )}
 
             {mode === 'login' && (
@@ -494,7 +557,7 @@ const Auth = () => {
               type="submit"
               variant="hero"
               size="lg"
-              className="w-full gap-2"
+              className="w-full gap-2 mt-4"
               disabled={loading}
             >
               {loading ? (
@@ -510,7 +573,7 @@ const Auth = () => {
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-4 text-center text-sm">
             {mode === 'login' && (
               <p className="text-muted-foreground">
                 New to रीवस्त्र?{" "}
@@ -548,7 +611,7 @@ const Auth = () => {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-muted-foreground mt-6">
+        <p className="text-center text-xs text-muted-foreground mt-4">
           By continuing, you agree to our Terms & Privacy Policy
         </p>
       </motion.div>

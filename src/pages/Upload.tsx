@@ -20,9 +20,9 @@ import { useAuth } from "@/hooks/useAuth";
 // import { usePassBenefits } from "@/hooks/usePassBenefits"; // COMMENTED OUT - Pass system disabled
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getCategorySizes } from "@/data/sizeOptions";
 
-const categories = ["Tops", "Bottoms", "Dresses", "Shoes", "Accessories", "Jewelry", "Outerwear"];
-const sizes = ["XS", "S", "M", "L", "XL", "XXL", "One Size"];
+const categories = ["Tops", "Bottoms", "Dresses", "Shoes", "Accessories", "Jewelry", "Outerwear", "Bags"];
 const conditions = ["New with Tags", "Like New", "Good", "Fair"];
 
 const Upload = () => {
@@ -334,12 +334,12 @@ const Upload = () => {
 
                 <div className="space-y-2">
                   <Label>Size <span className="text-primary">*</span></Label>
-                  <Select value={size} onValueChange={setSize}>
+                  <Select value={size} onValueChange={setSize} disabled={!category}>
                     <SelectTrigger className="h-12 bg-muted border-0">
-                      <SelectValue placeholder="Select" />
+                      <SelectValue placeholder={category ? "Select size" : "Select category first"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {sizes.map(s => (
+                      {category && getCategorySizes(category).map(s => (
                         <SelectItem key={s} value={s.toLowerCase()}>{s}</SelectItem>
                       ))}
                     </SelectContent>
@@ -399,12 +399,18 @@ const Upload = () => {
                     type="number"
                     placeholder="0"
                     value={price}
-                    onChange={(e) => setPrice(e.target.value)}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (value <= 10000 || e.target.value === '') {
+                        setPrice(e.target.value);
+                      }
+                    }}
+                    max="10000"
                     className="h-14 text-2xl font-display font-bold pl-8 bg-muted border-0"
                   />
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Tip: Check similar items to price competitively
+                  Maximum price: ₹10,000 • Check similar items to price competitively
                 </p>
               </div>
             </div>
