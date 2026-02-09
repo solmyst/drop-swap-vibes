@@ -22,7 +22,6 @@ interface CategoryPillsProps {
 const CategoryPills = ({ onCategoryChange, activeCategory: externalActiveCategory }: CategoryPillsProps) => {
   const [activeCategory, setActiveCategory] = useState(externalActiveCategory || "all");
 
-  // Sync with external activeCategory prop
   useEffect(() => {
     if (externalActiveCategory !== undefined) {
       setActiveCategory(externalActiveCategory);
@@ -35,7 +34,7 @@ const CategoryPills = ({ onCategoryChange, activeCategory: externalActiveCategor
   };
 
   return (
-    <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
       {categories.map((category) => {
         const isActive = activeCategory === category.id;
         const Icon = category.icon;
@@ -44,22 +43,14 @@ const CategoryPills = ({ onCategoryChange, activeCategory: externalActiveCategor
           <motion.button
             key={category.id}
             onClick={() => handleCategoryClick(category.id)}
-            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className={`relative flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-sm whitespace-nowrap transition-all duration-300 ${
+            className={`relative flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
               isActive
-                ? "text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground glass"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
             }`}
           >
-            {isActive && (
-              <motion.div
-                layoutId="activePill"
-                className="absolute inset-0 bg-gradient-to-r from-primary via-secondary to-accent rounded-full -z-10"
-                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-              />
-            )}
-            <Icon className="w-4 h-4" />
+            <Icon className="w-3.5 h-3.5" />
             {category.label}
           </motion.button>
         );

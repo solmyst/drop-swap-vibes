@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Heart, MessageCircle, Plus, Menu, X, User, LogOut, ShoppingBag } from "lucide-react";
+import { Search, Heart, MessageCircle, Plus, Menu, X, User, LogOut, ShoppingBag, Home, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { ASSETS } from "@/lib/assets";
 import {
@@ -17,6 +17,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
@@ -24,175 +25,141 @@ const Navbar = () => {
   };
 
   return (
-    <motion.nav
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50"
-    >
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <motion.div
-              whileHover={{ rotate: 12 }}
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-            >
+    <>
+      {/* Desktop Top Nav */}
+      <motion.nav
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/30"
+      >
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2.5">
               <img 
                 src={ASSETS.logo} 
-                alt="रीवस्त्र Logo" 
-                className="w-10 h-10"
+                alt="रीवस्त्र" 
+                className="w-9 h-9 rounded-lg"
               />
-            </motion.div>
-            <span className="font-display font-bold text-xl hidden sm:block">
-              <span className="text-gradient">रीवस्त्र</span>
-            </span>
-          </Link>
+              <span className="font-display font-bold text-lg tracking-tight hidden sm:block">
+                रीवस्त्र
+              </span>
+            </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-2">
-            <Link to="/browse">
-              <Button variant="ghost" className="gap-2">
-                <Search className="w-4 h-4" />
-                Browse
-              </Button>
-            </Link>
-             <Link to="/store">
-              <Button variant="ghost" className="gap-2">
-                <ShoppingBag className="w-4 h-4" />
-                Store
-              </Button>
-            </Link>
-            <Link to="/wishlist">
-              <Button variant="ghost" className="gap-2">
-                <Heart className="w-4 h-4" />
-                Wishlist
-              </Button>
-            </Link>
-            <Link to="/messages">
-              <Button variant="ghost" className="gap-2 relative">
-                <MessageCircle className="w-4 h-4" />
-                Messages
-              </Button>
-            </Link>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-3">
-            <Link to="/upload" className="hidden sm:block">
-              <Button variant="neon" size="sm" className="gap-2">
-                <Plus className="w-4 h-4" />
-                Sell
-              </Button>
-            </Link>
-            
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="glass" size="icon" className="rounded-full">
-                    <User className="w-5 h-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile" className="cursor-pointer">
-                      <User className="w-4 h-4 mr-2" />
-                      My Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/wishlist" className="cursor-pointer">
-                      <Heart className="w-4 h-4 mr-2" />
-                      Wishlist
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/messages" className="cursor-pointer">
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Messages
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Link to="/auth">
-                <Button variant="glass" size="sm" className="gap-2">
-                  <User className="w-4 h-4" />
-                  Sign In
+            {/* Desktop Nav Links */}
+            <div className="hidden md:flex items-center gap-1">
+              <Link to="/browse">
+                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+                  <Compass className="w-4 h-4" />
+                  Discover
                 </Button>
               </Link>
-            )}
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden glass border-t border-border/50"
-          >
-            <div className="container mx-auto px-4 py-4 flex flex-col gap-2">
-              <Link to="/browse" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <Search className="w-5 h-5" />
-                  Browse
-                </Button>
-              </Link>
-              <Link to="/store" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <ShoppingBag className="w-5 h-5" />
+              <Link to="/store">
+                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+                  <ShoppingBag className="w-4 h-4" />
                   Store
                 </Button>
               </Link>
-              <Link to="/wishlist" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <Heart className="w-5 h-5" />
-                  Wishlist
+              <Link to="/wishlist">
+                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+                  <Heart className="w-4 h-4" />
+                  Saved
                 </Button>
               </Link>
-              <Link to="/messages" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <MessageCircle className="w-5 h-5" />
-                  Messages
+              <Link to="/messages">
+                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+                  <MessageCircle className="w-4 h-4" />
+                  Inbox
                 </Button>
               </Link>
-              <Link to="/upload" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="hero" className="w-full justify-start gap-3 mt-2">
-                  <Plus className="w-5 h-5" />
-                  Sell Your Clothes
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              <Link to="/upload" className="hidden sm:block">
+                <Button size="sm" className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Sell
                 </Button>
               </Link>
-              {!user && (
-                <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
-                  <Button variant="outline" className="w-full justify-start gap-3">
-                    <User className="w-5 h-5" />
+              
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full">
+                      <User className="w-5 h-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="cursor-pointer">
+                        <User className="w-4 h-4 mr-2" />
+                        My Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/wishlist" className="cursor-pointer">
+                        <Heart className="w-4 h-4 mr-2" />
+                        Saved
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/messages" className="cursor-pointer">
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        Inbox
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link to="/auth">
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <User className="w-4 h-4" />
                     Sign In
                   </Button>
                 </Link>
               )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.nav>
+          </div>
+        </div>
+      </motion.nav>
+
+      {/* Mobile Bottom Nav */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur-xl border-t border-border/30 safe-area-bottom">
+        <div className="flex items-center justify-around h-16 px-2">
+          <MobileNavItem to="/" icon={Home} label="Home" active={location.pathname === '/'} />
+          <MobileNavItem to="/browse" icon={Compass} label="Discover" active={location.pathname === '/browse'} />
+          
+          {/* Elevated Sell Button */}
+          <Link to="/upload" className="relative -mt-5">
+            <motion.div
+              whileTap={{ scale: 0.92 }}
+              className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-glow"
+            >
+              <Plus className="w-6 h-6 text-primary-foreground" />
+            </motion.div>
+          </Link>
+          
+          <MobileNavItem to="/messages" icon={MessageCircle} label="Inbox" active={location.pathname === '/messages'} />
+          <MobileNavItem to={user ? "/profile" : "/auth"} icon={User} label={user ? "Profile" : "Sign In"} active={location.pathname === '/profile'} />
+        </div>
+      </div>
+    </>
   );
 };
+
+const MobileNavItem = ({ to, icon: Icon, label, active }: { to: string; icon: React.ElementType; label: string; active: boolean }) => (
+  <Link to={to} className="flex flex-col items-center gap-0.5 min-w-[48px]">
+    <Icon className={`w-5 h-5 transition-colors ${active ? 'text-primary' : 'text-muted-foreground'}`} />
+    <span className={`text-[10px] font-medium transition-colors ${active ? 'text-primary' : 'text-muted-foreground'}`}>
+      {label}
+    </span>
+  </Link>
+);
 
 export default Navbar;

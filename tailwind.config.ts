@@ -8,15 +8,15 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "1.5rem",
+      padding: "1rem",
       screens: {
         "2xl": "1400px",
       },
     },
     extend: {
       fontFamily: {
-        display: ["Space Grotesk", "sans-serif"],
-        body: ["Inter", "sans-serif"],
+        display: ["Satoshi", "sans-serif"],
+        body: ["General Sans", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -52,10 +52,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        neon: "hsl(var(--neon-green))",
-        lavender: "hsl(var(--lavender))",
-        pastelPink: "hsl(var(--pastel-pink))",
-        coral: "hsl(var(--coral))",
+        brand: {
+          gold: "hsl(var(--brand-gold))",
+          warm: "hsl(var(--brand-warm))",
+          charcoal: "hsl(var(--brand-charcoal))",
+          terra: "hsl(var(--brand-terra))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -63,11 +65,13 @@ export default {
         sm: "calc(var(--radius) - 4px)",
         xl: "calc(var(--radius) + 4px)",
         "2xl": "calc(var(--radius) + 8px)",
+        "3xl": "1.5rem",
       },
       boxShadow: {
         glow: "var(--shadow-glow)",
         card: "var(--shadow-card)",
         elevated: "var(--shadow-elevated)",
+        soft: "var(--shadow-soft)",
       },
       keyframes: {
         "accordion-down": {

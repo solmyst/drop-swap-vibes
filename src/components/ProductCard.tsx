@@ -1,11 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Share2, Verified, Edit, CheckCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Heart, MessageCircle, Eye, Verified } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-// import { usePassBenefits } from "@/hooks/usePassBenefits"; // COMMENTED OUT - Pass system disabled
 import { toast } from "sonner";
 
 interface ProductCardProps {
@@ -19,14 +16,15 @@ interface ProductCardProps {
     avatar: string;
     verified: boolean;
   };
-  sellerId?: string; // Add seller ID to identify ownership
+  sellerId?: string;
   condition: string;
   size: string;
   category: string;
   isNew?: boolean;
   isFeatured?: boolean;
-  onEdit?: () => void; // Callback for editing
-  onMarkAsSold?: () => void; // Callback for marking as sold
+  onEdit?: () => void;
+  onMarkAsSold?: () => void;
+  variant?: 'default' | 'hero' | 'compact';
 }
 
 const ProductCard = ({
@@ -36,27 +34,19 @@ const ProductCard = ({
   originalPrice,
   image,
   seller,
-  sellerId,
   condition,
   size,
-  category,
   isNew,
   isFeatured,
-  onEdit,
-  onMarkAsSold,
+  variant = 'default',
 }: ProductCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const { user } = useAuth();
-  // const { benefits, canStartChat } = usePassBenefits(); // COMMENTED OUT - Pass system disabled
   const navigate = useNavigate();
 
   const discount = originalPrice
     ? Math.round(((originalPrice - price) / originalPrice) * 100)
     : 0;
-
-  // Check if current user is the seller
-  const isOwnListing = user && sellerId && user.id === sellerId;
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -66,181 +56,130 @@ const ProductCard = ({
       return;
     }
     setIsLiked(!isLiked);
-    toast.success(isLiked ? 'Removed from wishlist' : 'Added to wishlist ❤️');
+    toast.success(isLiked ? 'Removed from saved' : 'Saved ❤️');
   };
 
   const handleChat = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
     if (!user) {
       navigate('/auth');
       return;
     }
-
-    // Don't allow chatting with yourself
-    if (isOwnListing) {
-      toast.error("You can't chat with yourself!");
-      return;
-    }
-
-    // COMMENTED OUT - Pass system disabled, allow unlimited chats
-    // // Check if user can start chat based on their pass
-    // if (!canStartChat()) {
-    //   toast.error('Chat limit reached! Upgrade your pass to chat with more sellers.');
-    //   navigate('/pricing');
-    //   return;
-    // }
-
-    // Navigate to messages with this product
     navigate(`/messages?product=${id}`);
   };
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (onEdit) {
-      onEdit();
-    }
-  };
-
-  const handleMarkAsSold = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (onMarkAsSold) {
-      onMarkAsSold();
-    }
-  };
+  const isHero = variant === 'hero';
 
   return (
     <Link to={`/product/${id}`}>
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -8 }}
-        onHoverStart={() => setIsHovered(true)}
-        onHoverEnd={() => setIsHovered(false)}
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.2 }}
         className="group relative"
       >
-        <div className="relative overflow-hidden rounded-2xl bg-card border border-border/50 shadow-card hover:shadow-elevated transition-all duration-300">
-          {/* Image Container */}
-          <div className="relative aspect-[3/4] overflow-hidden">
-            <img
-              src={image}
-              alt={title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className={`relative overflow-hidden rounded-2xl bg-card ${isHero ? 'aspect-[3/5]' : 'aspect-[3/4]'}`}>
+          {/* Image */}
+          <img
+            src={image}
+            alt={title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+          
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-foreground/10 to-transparent" />
 
-            {/* Top badges */}
-            <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+          {/* Top row: badges + heart */}
+          <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
+            <div className="flex flex-wrap gap-1.5">
               {isNew && (
-                <Badge className="bg-primary text-primary-foreground border-0">
-                  New
-                </Badge>
+                <span className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wide">
+                  Just Dropped
+                </span>
               )}
               {isFeatured && (
-                <Badge className="bg-secondary text-secondary-foreground border-0">
-                  🔥 Hot
-                </Badge>
+                <span className="px-2 py-0.5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold uppercase tracking-wide">
+                  🔥 Rare
+                </span>
               )}
               {discount > 0 && (
-                <Badge className="bg-accent text-accent-foreground border-0">
+                <span className="px-2 py-0.5 rounded-full bg-foreground/80 text-background text-[10px] font-bold">
                   -{discount}%
-                </Badge>
+                </span>
               )}
             </div>
 
-            {/* Wishlist button */}
             <motion.button
-              whileTap={{ scale: 0.9 }}
+              whileTap={{ scale: 0.8 }}
               onClick={handleWishlist}
-              className="absolute top-3 right-3 w-10 h-10 rounded-full glass flex items-center justify-center"
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                isLiked 
+                  ? 'bg-primary/90 text-primary-foreground' 
+                  : 'bg-background/60 backdrop-blur-md text-foreground/80 hover:bg-background/80'
+              }`}
             >
-              <Heart
-                className={`w-5 h-5 transition-colors ${
-                  isLiked ? "fill-primary text-primary" : "text-foreground"
-                }`}
-              />
+              <Heart className={`w-4 h-4 ${isLiked ? 'fill-current heart-burst' : ''}`} />
             </motion.button>
-
-            {/* Quick actions */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 20 }}
-              className="absolute bottom-4 left-4 right-4 flex gap-2"
-            >
-              {isOwnListing ? (
-                // Show edit and mark as sold buttons for own listings
-                <>
-                  <Button variant="glass" size="sm" className="flex-1 gap-2" onClick={handleEdit}>
-                    <Edit className="w-4 h-4" />
-                    Edit
-                  </Button>
-                  {onMarkAsSold && (
-                    <Button variant="glass" size="sm" className="flex-1 gap-2" onClick={handleMarkAsSold}>
-                      <CheckCircle className="w-4 h-4" />
-                      Sold
-                    </Button>
-                  )}
-                </>
-              ) : (
-                // Show chat button for other's listings
-                <Button variant="glass" size="sm" className="flex-1 gap-2" onClick={handleChat}>
-                  <MessageCircle className="w-4 h-4" />
-                  Chat
-                </Button>
-              )}
-              <Button variant="glass" size="icon" className="shrink-0" onClick={(e) => e.preventDefault()}>
-                <Share2 className="w-4 h-4" />
-              </Button>
-            </motion.div>
           </div>
 
-          {/* Content */}
-          <div className="p-4">
-            {/* Seller info */}
-            <div className="flex items-center gap-2 mb-3">
+          {/* Bottom content overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-3.5">
+            {/* Seller */}
+            <div className="flex items-center gap-1.5 mb-2">
               <img
                 src={seller.avatar}
                 alt={seller.name}
-                className="w-6 h-6 rounded-full object-cover border-2 border-primary/20"
+                className="w-5 h-5 rounded-full object-cover border border-background/30"
               />
-              <span className="text-sm text-muted-foreground truncate">
+              <span className="text-background/90 text-xs font-medium truncate">
                 {seller.name}
               </span>
               {seller.verified && (
-                <Verified className="w-4 h-4 text-primary shrink-0" />
+                <Verified className="w-3.5 h-3.5 text-primary shrink-0" />
               )}
             </div>
 
             {/* Title */}
-            <h3 className="font-display font-semibold text-base mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+            <h3 className="font-display font-semibold text-sm text-background leading-tight line-clamp-1 mb-1.5">
               {title}
             </h3>
 
-            {/* Tags */}
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              <span className="px-2 py-0.5 rounded-full bg-muted text-xs text-muted-foreground">
-                {size}
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-muted text-xs text-muted-foreground">
-                {condition}
-              </span>
-            </div>
-
-            {/* Price */}
-            <div className="flex items-baseline gap-2">
-              <span className="font-display font-bold text-xl">₹{price}</span>
-              {originalPrice && (
-                <span className="text-sm text-muted-foreground line-through">
-                  ₹{originalPrice}
+            {/* Price + Meta */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-display font-bold text-lg text-background">₹{price}</span>
+                {originalPrice && (
+                  <span className="text-xs text-background/50 line-through">₹{originalPrice}</span>
+                )}
+              </div>
+              <div className="flex gap-1">
+                <span className="px-1.5 py-0.5 rounded bg-background/15 text-background/80 text-[10px] font-medium backdrop-blur-sm">
+                  {size}
                 </span>
-              )}
+                <span className="px-1.5 py-0.5 rounded bg-background/15 text-background/80 text-[10px] font-medium backdrop-blur-sm">
+                  {condition}
+                </span>
+              </div>
             </div>
           </div>
+
+          {/* Hover action - Chat */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileHover={{ opacity: 1 }}
+            className="absolute inset-0 bg-foreground/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={handleChat}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-background/90 backdrop-blur-md text-foreground text-sm font-medium shadow-elevated"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Chat with seller
+            </motion.button>
+          </motion.div>
         </div>
       </motion.div>
     </Link>

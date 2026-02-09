@@ -1,134 +1,88 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-      {/* Animated background */}
+    <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden pt-16">
+      {/* Subtle warm gradient background */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-secondary/20 rounded-full blur-3xl animate-pulse-slow delay-1000" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/10 rounded-full blur-3xl animate-pulse-slow delay-500" />
+        <div className="absolute top-0 left-0 right-0 h-full bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px]" />
       </div>
 
-      {/* Grid pattern overlay */}
-      <div 
-        className="absolute inset-0 -z-10 opacity-[0.03]"
-        style={{
-          backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px'
-        }}
-      />
-
       <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Badge */}
+        <div className="max-w-3xl mx-auto text-center">
+          {/* Tag */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8"
+            transition={{ delay: 0.15 }}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-8"
           >
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">The Sustainable Fashion Revolution</span>
+            <Flame className="w-3.5 h-3.5 text-primary" />
+            <span className="text-xs font-semibold tracking-wide uppercase text-primary">Discover rare finds</span>
           </motion.div>
 
-          {/* Main heading */}
+          {/* Heading */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold leading-tight mb-6"
+            transition={{ delay: 0.25 }}
+            className="font-display text-[2.75rem] sm:text-6xl md:text-7xl font-black leading-[0.95] tracking-tight mb-6"
           >
-            Drip different.
+            Your closet's
             <br />
-            <span className="text-gradient">Thrift smart.</span>
+            <span className="text-gradient">next obsession.</span>
           </motion.h1>
 
           {/* Subtitle */}
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10"
+            transition={{ delay: 0.35 }}
+            className="text-base sm:text-lg text-muted-foreground max-w-lg mx-auto mb-10 leading-relaxed"
           >
-            Buy & sell pre-loved fashion with zero waste energy.
-
-            Dekh kya raha ho becho.
+            Hunt unique pre-loved fashion. Flex your finds. 
+            Join India's coolest thrift community.
           </motion.p>
 
-          {/* CTA Buttons */}
+          {/* CTA */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+            transition={{ delay: 0.45 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-3"
           >
             <Link to="/browse">
-              <Button variant="hero" size="xl" className="w-full sm:w-auto">
-                Start Browsing
-                <ArrowRight className="w-5 h-5" />
+              <Button size="lg" className="w-full sm:w-auto gap-2 text-base">
+                Start Exploring
+                <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
             <Link to="/upload">
-              <Button variant="outline" size="xl" className="w-full sm:w-auto">
-                Sell Your Clothes
+              <Button variant="outline" size="lg" className="w-full sm:w-auto text-base">
+                List for Free
               </Button>
             </Link>
           </motion.div>
 
-          {/* Stats */}
-          {/* <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+          {/* Social proof */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="grid grid-cols-3 gap-4 max-w-lg mx-auto"
+            className="mt-12 flex items-center justify-center gap-6 text-sm text-muted-foreground"
           >
-            {[
-              { icon: TrendingUp, value: "50K+", label: "Active Users" },
-              { icon: Leaf, value: "120K", label: "Items Saved" },
-              { icon: Sparkles, value: "₹5L+", label: "Saved on Fashion" },
-            ].map((stat, index) => (
-              <motion.div
-                key={index}
-                whileHover={{ scale: 1.05 }}
-                className="glass rounded-2xl p-4"
-              >
-                <stat.icon className="w-5 h-5 text-primary mx-auto mb-2" />
-                <div className="font-display font-bold text-2xl">{stat.value}</div>
-                <div className="text-xs text-muted-foreground">{stat.label}</div>
-              </motion.div>
-            ))}
-          </motion.div> */}
+            <span>🔥 <strong className="text-foreground">1.2K+</strong> items listed</span>
+            <span className="w-1 h-1 rounded-full bg-border" />
+            <span>💬 <strong className="text-foreground">500+</strong> deals made</span>
+            <span className="w-1 h-1 rounded-full bg-border hidden sm:block" />
+            <span className="hidden sm:inline">♻️ <strong className="text-foreground">Zero</strong> waste</span>
+          </motion.div>
         </div>
       </div>
-
-      {/* Floating elements */}
-      <motion.div
-        animate={{ y: [0, -20, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute left-10 top-1/3 hidden lg:block"
-      >
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 backdrop-blur-sm border border-primary/20 rotate-12" />
-      </motion.div>
-      
-      <motion.div
-        animate={{ y: [0, 20, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute right-16 top-1/2 hidden lg:block"
-      >
-        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-secondary/30 to-secondary/10 backdrop-blur-sm border border-secondary/20" />
-      </motion.div>
-
-      <motion.div
-        animate={{ y: [0, -15, 0] }}
-        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        className="absolute right-1/4 bottom-1/4 hidden lg:block"
-      >
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/30 to-accent/10 backdrop-blur-sm border border-accent/20 -rotate-12" />
-      </motion.div>
     </section>
   );
 };
