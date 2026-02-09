@@ -1,14 +1,22 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, User, Sparkles, ArrowLeft, AlertCircle, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Sparkles, ArrowLeft, AlertCircle, CheckCircle, MapPin } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { ASSETS } from "@/lib/assets";
 import { supabase } from "@/integrations/supabase/client";
+import { indiaStates, indiaCities } from "@/data/indiaLocations";
 
 type AuthMode = 'login' | 'signup' | 'forgot-password' | 'reset-password';
 
@@ -20,6 +28,9 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [state, setState] = useState("");
+  const [city, setCity] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const { signIn, signUp } = useAuth();
@@ -104,6 +115,12 @@ const Auth = () => {
           return;
         }
 
+        if (!fullName.trim()) {
+          toast.error("Please enter your full name");
+          setLoading(false);
+          return;
+        }
+
         if (!usernameValidation.isValid) {
           if (!usernameValidation.minLength) {
             toast.error("Username must be at least 3 characters long");
@@ -112,6 +129,18 @@ const Auth = () => {
           } else if (!usernameValidation.validChars) {
             toast.error("Username can only contain letters, numbers, and underscores");
           }
+          setLoading(false);
+          return;
+        }
+
+        if (!state) {
+          toast.error("Please select your state");
+          setLoading(false);
+          return;
+        }
+
+        if (!city) {
+          toast.error("Please select your city");
           setLoading(false);
           return;
         }
@@ -141,7 +170,8 @@ const Auth = () => {
           return;
         }
 
-        const { error } = await signUp(email, password, username);
+        const location = `${city}, ${state}`;
+        const { error } = await signUp(email, password, username, fullName, location);
         if (error) {
           // Handle specific Supabase auth errors
           if (error.message.includes('User already registered')) {
@@ -303,30 +333,78 @@ const Auth = () => {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'signup' && (
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="reevastra_user"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value.toLowerCase())}
-                    className="h-12 pl-12 bg-muted border-0 rounded-xl"
-                    required
-                  />
-                </div>
-                {username && !usernameValidation.isValid && (
-                  <div className="text-xs text-red-500 mt-1">
-                    {!usernameValidation.minLength && "Username must be at least 3 characters"}
-                    {!usernameValidation.maxLength && "Username must be less than 20 characters"}
-                    {!usernameValidation.validChars && "Only letters, numbers, and underscores allowed"}
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      id="fullName"
+                      type="text"
+                      placeholder="Your full name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="h-12 pl-12 bg-muted border-0 rounded-xl"
+                      required
+                    />
                   </div>
-                )}
-              </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      id="username"
+                      type="text"
+                      placeholder="reevastra_user"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                      className="h-12 pl-12 bg-muted border-0 rounded-xl"
+                      required
+                    />
+                  </div>
+                  {username && !usernameValidation.isValid && (
+                    <div className="text-xs text-red-500 mt-1">
+                      {!usernameValidation.minLength && "Username must be at least 3 characters"}
+                      {!usernameValidation.maxLength && "Username must be less than 20 characters"}
+                      {!usernameValidation.validChars && "Only letters, numbers, and underscores allowed"}
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="state">State</Label>
+                    <Select value={state} onValueChange={(value) => { setState(value); setCity(""); }}>
+                      <SelectTrigger className="h-12 bg-muted border-0 rounded-xl">
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {indiaStates.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <Select value={city} onValueChange={setCity} disabled={!state}>
+                      <SelectTrigger className="h-12 bg-muted border-0 rounded-xl">
+                        <SelectValue placeholder="Select city" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {state && indiaCities[state]?.map((c) => (
+                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </>
             )}
 
             <div className="space-y-2">
