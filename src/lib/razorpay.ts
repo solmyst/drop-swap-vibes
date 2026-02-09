@@ -79,9 +79,10 @@ export const initializeRazorpayPayment = (
   };
 
   // Check if Razorpay is loaded
-  if (typeof window !== 'undefined' && (window as { Razorpay?: new (options: unknown) => { open: () => void } }).Razorpay) {
+  const win = window as unknown as { Razorpay?: new (options: unknown) => { open: () => void } };
+  if (typeof window !== 'undefined' && win.Razorpay) {
     try {
-      const rzp = new (window as { Razorpay: new (options: unknown) => { open: () => void } }).Razorpay(options);
+      const rzp = new win.Razorpay(options);
       rzp.open();
     } catch (error) {
       console.error('Error initializing Razorpay:', error);

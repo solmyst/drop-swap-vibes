@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import ProductCard from "./ProductCard";
-import CategoryPills from "./CategoryPills";
-import { TrendingUp, Clock, Flame } from "lucide-react";
+import { ArrowRight, Flame, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
@@ -17,6 +16,7 @@ interface Product {
   category: string;
   is_featured: boolean;
   seller_id: string;
+  created_at: string;
   seller?: {
     username: string;
     avatar_url: string;
@@ -38,14 +38,13 @@ const FeaturedSection = () => {
       .select('*')
       .eq('status', 'active')
       .order('created_at', { ascending: false })
-      .limit(8);
+      .limit(12);
 
     if (error) {
       setLoading(false);
       return;
     }
 
-    // Fetch seller profiles
     const enrichedProducts = await Promise.all((data || []).map(async (product) => {
       const { data: profile } = await supabase
         .from('profiles')
@@ -69,10 +68,10 @@ const FeaturedSection = () => {
 
   if (loading) {
     return (
-      <section className="py-16 md:py-24">
+      <section className="py-8">
         <div className="container mx-auto px-4">
-          <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="flex justify-center py-16">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         </div>
       </section>
@@ -81,14 +80,13 @@ const FeaturedSection = () => {
 
   if (products.length === 0) {
     return (
-      <section className="py-16 md:py-24">
+      <section className="py-16">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-            No listings yet
-          </h2>
-          <p className="text-muted-foreground mb-6">Be the first to list your thrift finds!</p>
+          <Sparkles className="w-10 h-10 text-primary mx-auto mb-4" />
+          <h2 className="font-display text-2xl font-bold mb-2">No drops yet</h2>
+          <p className="text-muted-foreground mb-6 text-sm">Be the first to list your thrift finds!</p>
           <Link to="/upload">
-            <Button variant="hero">Start Selling</Button>
+            <Button>Start Selling</Button>
           </Link>
         </div>
       </section>
@@ -96,64 +94,34 @@ const FeaturedSection = () => {
   }
 
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-6 md:py-12">
       <div className="container mx-auto px-4">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
-          <div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex items-center gap-2 mb-3"
-            >
-              <Flame className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium text-primary uppercase tracking-wider">
-                Trending Now
-              </span>
-            </motion.div>
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="font-display text-3xl md:text-4xl lg:text-5xl font-bold"
-            >
-              Fresh drops you'll{" "}
-              <span className="text-gradient">obsess over</span>
-            </motion.h2>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Flame className="w-5 h-5 text-accent" />
+            <h2 className="font-display text-xl sm:text-2xl font-bold tracking-tight">
+              Fresh Drops
+            </h2>
           </div>
-
-          <div className="flex gap-2">
-            <Link to="/browse">
-              <Button variant="ghost" size="sm" className="gap-2">
-                <TrendingUp className="w-4 h-4" />
-                View All
-              </Button>
-            </Link>
-          </div>
+          <Link to="/browse">
+            <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground">
+              See all
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </Link>
         </div>
 
-        {/* Categories */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-          className="mb-8"
-        >
-          <CategoryPills />
-        </motion.div>
-
-        {/* Product Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        {/* Asymmetric Feed Grid - Pinterest/Instagram style */}
+        <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4">
           {products.map((product, index) => (
             <motion.div
               key={product.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: index * 0.04 }}
+              className="break-inside-avoid"
             >
               <ProductCard
                 id={product.id}
@@ -165,28 +133,27 @@ const FeaturedSection = () => {
                   avatar: product.seller?.avatar_url || '/placeholder.svg',
                   verified: product.seller?.is_verified || false,
                 }}
+                sellerId={product.seller_id}
                 condition={product.condition}
                 size={product.size}
                 category={product.category}
                 isFeatured={product.is_featured}
+                isNew={new Date(product.created_at) > new Date(Date.now() - 48 * 60 * 60 * 1000)}
+                variant={index === 0 || index === 5 ? 'hero' : 'default'}
               />
             </motion.div>
           ))}
         </div>
 
-        {/* Load More */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-center mt-12"
-        >
+        {/* Load more */}
+        <div className="text-center mt-10">
           <Link to="/browse">
-            <Button variant="outline" size="lg">
-              Browse All Items
+            <Button variant="outline" size="lg" className="gap-2">
+              Explore More
+              <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
