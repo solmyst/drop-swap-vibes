@@ -2,10 +2,14 @@ import { motion } from "framer-motion";
 import { ArrowRight, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import AtmosphericLayer from "@/components/AtmosphericLayer";
 
 const Hero = () => {
   return (
     <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden pt-16">
+      {/* Atmospheric floating threads */}
+      <AtmosphericLayer variant="hero" />
+      
       {/* Subtle warm gradient background */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 left-0 right-0 h-full bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
