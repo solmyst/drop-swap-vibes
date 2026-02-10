@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, User, Sparkles, ArrowLeft, AlertCircle, CheckCircle, MapPin } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Sparkles, ArrowLeft, AlertCircle, CheckCircle } from "lucide-react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,6 @@ const Auth = () => {
   const [state, setState] = useState("");
   const [city, setCity] = useState("");
   const [loading, setLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -258,7 +257,8 @@ const Auth = () => {
           toast.error("Failed to send reset email. Please try again.");
         } else {
           toast.success("Password reset email sent! Check your inbox. 📧");
-          setEmailSent(true);
+          // Show forgot password form with success message
+          // User will receive email and can click the link
         }
 
       } else if (mode === 'reset-password') {
@@ -330,41 +330,6 @@ const Auth = () => {
       </div>
     );
   };
-
-  if (emailSent) {
-    return (
-      <div className="min-h-screen bg-background dark flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md text-center"
-        >
-          <div className="glass rounded-3xl p-8">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Mail className="w-8 h-8 text-green-600" />
-            </div>
-            <h1 className="font-display text-2xl font-bold mb-2">Check your email</h1>
-            <p className="text-muted-foreground mb-6">
-              {mode === 'signup' 
-                ? "We've sent a confirmation link to your email. Please click it to activate your account."
-                : "We've sent a password reset link to your email. Click it to reset your password."
-              }
-            </p>
-            <Button
-              onClick={() => {
-                setEmailSent(false);
-                setMode('login');
-              }}
-              variant="outline"
-              className="w-full"
-            >
-              Back to Sign In
-            </Button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background dark flex items-center justify-center p-4">
