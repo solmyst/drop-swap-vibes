@@ -14,13 +14,9 @@
       // Note: this 404.html file must be at least 512 bytes for it to work
       // with Internet Explorer (it is currently > 512 bytes)
 
-      // If you're creating a Project Pages site and NOT using a custom domain,
-      // then set pathSegmentsToKeep to 1 (enterprise users may need to set it to > 1).
-      // This way the code will only replace the route part and not the real directory.
-      // This script will NOT work if your site is hosted in a subdirectory,
-      // for example: https://username.github.io/repo-name/
-      // In this case, you would set pathSegmentsToKeep to 1 (or 2, 3, etc).
-      var pathSegmentsToKeep = 1;
+      // Using custom domain (revastra.me), so pathSegmentsToKeep is 0
+      // This means all path segments are part of the route
+      var pathSegmentsToKeep = 0;
 
       var l = window.location;
       l.replace(

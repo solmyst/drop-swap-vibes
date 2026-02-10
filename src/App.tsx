@@ -27,8 +27,8 @@ import AdminTransactions from "./pages/admin/AdminTransactions";
 
 const queryClient = new QueryClient();
 
-// Get the base path for GitHub Pages
-const basename = import.meta.env.MODE === 'production' ? '/drop-swap-vibes' : '';
+// Using custom domain (revastra.me), so basename is always root
+const basename = '';
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
