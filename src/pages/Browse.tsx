@@ -219,7 +219,7 @@ const Browse = () => {
               
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="lg" className="gap-2 h-12">
+                  <Button variant="outline" size="lg" className="gap-2 h-12 relative z-10">
                     <SlidersHorizontal className="w-4 h-4" />
                     Filters
                     {activeFilters.length > 0 && (
@@ -229,7 +229,7 @@ const Browse = () => {
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent>
+                <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
                   <SheetHeader>
                     <SheetTitle>Filter Products</SheetTitle>
                   </SheetHeader>
