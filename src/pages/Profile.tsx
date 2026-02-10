@@ -166,6 +166,37 @@ const Profile = () => {
     navigate('/');
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: `${profile?.username}'s Profile on रीवस्त्र`,
+      text: `Check out ${profile?.username}'s thrift collection on रीवस्त्र`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        // Use native share on mobile
+        await navigator.share(shareData);
+        toast.success('Shared successfully!');
+      } else {
+        // Fallback: copy link to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success('Profile link copied to clipboard!');
+      }
+    } catch (error) {
+      // User cancelled or error occurred
+      if (error instanceof Error && error.name !== 'AbortError') {
+        // Fallback: copy to clipboard
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          toast.success('Profile link copied to clipboard!');
+        } catch {
+          toast.error('Failed to share');
+        }
+      }
+    }
+  };
+
   const handleEditListing = (listing: Listing) => {
     setEditingListing(listing);
     setIsEditModalOpen(true);
@@ -300,7 +331,7 @@ const Profile = () => {
                         Edit Profile
                       </Button>
                     </Link>
-                    <Button variant="outline" size="sm" className="gap-2">
+                    <Button variant="outline" size="sm" className="gap-2" onClick={handleShare}>
                       <Share2 className="w-4 h-4" />
                       Share
                     </Button>

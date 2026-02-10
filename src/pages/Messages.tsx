@@ -483,11 +483,11 @@ const Messages = () => {
           </motion.div>
 
           {/* Chat Area */}
-          <div className={`flex-1 flex flex-col bg-background ${!selectedConvo ? "hidden md:flex" : "flex"}`}>
+          <div className={`flex-1 flex flex-col bg-background min-h-0 ${!selectedConvo ? "hidden md:flex" : "flex"}`}>
             {selectedConvo ? (
-              <>
+              <div className="flex flex-col h-full">
                 {/* Chat Header */}
-                <div className="p-3 md:p-4 border-b border-border flex items-center gap-3 md:gap-4 bg-background">
+                <div className="p-3 md:p-4 border-b border-border flex items-center gap-3 md:gap-4 bg-background shrink-0">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -510,7 +510,7 @@ const Messages = () => {
 
                 {/* Listing Preview */}
                 {selectedConvo.listing && (
-                  <div className="p-2 md:p-3 border-b border-border bg-muted/30">
+                  <div className="p-2 md:p-3 border-b border-border bg-muted/30 shrink-0">
                     <div className="flex items-center gap-2 md:gap-3">
                       <img
                         src={selectedConvo.listing.images?.[0] || '/placeholder.svg'}
@@ -526,7 +526,7 @@ const Messages = () => {
                 )}
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4 bg-background">
+                <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4 bg-background min-h-0">
                   {messages.length === 0 ? (
                     <div className="text-center text-muted-foreground py-8">
                       <p>No messages yet. Start the conversation!</p>
@@ -605,7 +605,7 @@ const Messages = () => {
                 </AnimatePresence>
 
                 {/* Input */}
-                <div className="p-2 md:p-4 border-t border-border bg-background sticky bottom-0 left-0 right-0 z-10">
+                <div className="p-2 md:p-4 border-t border-border bg-background shrink-0">
                   <div className="flex gap-2 md:gap-3">
                     <input
                       type="file"
@@ -645,7 +645,7 @@ const Messages = () => {
                     </Button>
                   </div>
                 </div>
-              </>
+              </div>
             ) : (
               <div className="flex-1 flex items-center justify-center text-muted-foreground">
                 <div className="text-center">

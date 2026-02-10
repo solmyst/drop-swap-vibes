@@ -269,6 +269,37 @@ const ProductDetail = () => {
     }
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: product?.title || 'Check out this item',
+      text: `${product?.title} - ₹${product?.price} on रीवस्त्र`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        // Use native share on mobile
+        await navigator.share(shareData);
+        toast.success('Shared successfully!');
+      } else {
+        // Fallback: copy link to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success('Link copied to clipboard!');
+      }
+    } catch (error) {
+      // User cancelled or error occurred
+      if (error instanceof Error && error.name !== 'AbortError') {
+        // Fallback: copy to clipboard
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          toast.success('Link copied to clipboard!');
+        } catch {
+          toast.error('Failed to share');
+        }
+      }
+    }
+  };
+
   const handleChat = () => {
     if (!user) {
       navigate('/auth');
@@ -592,7 +623,7 @@ const ProductDetail = () => {
                 )}
                 
                 <div className="flex gap-3">
-                  <Button variant="outline" size="lg" className="flex-1 gap-2">
+                  <Button variant="outline" size="lg" className="flex-1 gap-2" onClick={handleShare}>
                     <Share2 className="w-5 h-5" />
                     Share
                   </Button>
