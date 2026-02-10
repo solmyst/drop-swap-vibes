@@ -1,7 +1,7 @@
 // Asset path utility for deployment
+// Using custom domain (revastra.me), so no base path needed
 export const getAssetPath = (path: string): string => {
-  const base = import.meta.env.MODE === 'production' ? '/drop-swap-vibes' : '';
-  return `${base}${path}`;
+  return path;
 };
 
 export const ASSETS = {
