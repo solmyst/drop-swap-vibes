@@ -477,9 +477,7 @@ const Messages = () => {
                     <span className="font-semibold text-sm md:text-base block truncate">{selectedConvo.other_user.username}</span>
                     <p className="text-[10px] md:text-xs text-muted-foreground">Active now</p>
                   </div>
-                  <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 md:h-10 md:w-10">
-                    <MoreVertical className="w-5 h-5" />
-                  </Button>
+                  {/* Removed non-functional 3-dot menu button */}
                 </div>
 
                 {/* Listing Preview */}
