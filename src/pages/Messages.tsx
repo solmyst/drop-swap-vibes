@@ -605,8 +605,8 @@ const Messages = () => {
                 </AnimatePresence>
 
                 {/* Input */}
-                <div className="p-2 md:p-4 border-t border-border bg-background flex-shrink-0">
-                  <div className="flex gap-2 md:gap-3">
+                <div className="p-3 md:p-4 border-t border-border bg-background/95 backdrop-blur-xl flex-shrink-0 md:bg-background">
+                  <div className="flex gap-2 items-center max-w-4xl mx-auto">
                     <input
                       type="file"
                       accept="image/*"
@@ -617,30 +617,32 @@ const Messages = () => {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="shrink-0 h-9 w-9 md:h-10 md:w-10"
+                      className="shrink-0 h-10 w-10 rounded-full hover:bg-muted"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploadingImage}
                     >
-                      <Image className="w-4 h-4 md:w-5 md:h-5" />
+                      <Image className="w-5 h-5" />
                     </Button>
-                    <Input
-                      placeholder="Type a message..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                      className="bg-muted border-0 rounded-xl h-9 md:h-10 text-sm md:text-base"
-                    />
+                    <div className="flex-1 relative">
+                      <Input
+                        placeholder="Type a message..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                        className="bg-muted/50 border-0 rounded-full h-11 px-4 text-sm md:text-base pr-12 focus-visible:ring-1 focus-visible:ring-primary"
+                      />
+                    </div>
                     <Button
                       variant="hero"
                       size="icon"
-                      className="shrink-0 h-9 w-9 md:h-10 md:w-10"
+                      className="shrink-0 h-10 w-10 rounded-full shadow-lg"
                       onClick={handleSendMessage}
                       disabled={(!newMessage.trim() && !selectedImage) || uploadingImage}
                     >
                       {uploadingImage ? (
-                        <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                        <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                       ) : (
-                        <Send className="w-4 h-4 md:w-5 md:h-5" />
+                        <Send className="w-5 h-5" />
                       )}
                     </Button>
                   </div>
