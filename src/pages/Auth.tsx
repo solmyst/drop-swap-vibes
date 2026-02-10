@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Mail, Lock, User, Sparkles, ArrowLeft, AlertCircle, CheckCircle, MapPin } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import { indiaStates, indiaCities } from "@/data/indiaLocations";
 type AuthMode = 'login' | 'signup' | 'forgot-password' | 'reset-password';
 
 const Auth = () => {
+  const [searchParams] = useSearchParams();
   const [mode, setMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -36,6 +37,14 @@ const Auth = () => {
   const [emailSent, setEmailSent] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+
+  // Check if we're in reset password mode from URL
+  useEffect(() => {
+    const type = searchParams.get('type');
+    if (type === 'recovery') {
+      setMode('reset-password');
+    }
+  }, [searchParams]);
 
   // Password validation
   const validatePassword = (pwd: string) => {
@@ -198,7 +207,7 @@ const Auth = () => {
         }
 
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth?mode=reset-password`,
+          redirectTo: `${window.location.origin}/auth`,
         });
 
         if (error) {
@@ -207,6 +216,34 @@ const Auth = () => {
           toast.success("Password reset email sent! Check your inbox. 📧");
           setEmailSent(true);
         }
+
+      } else if (mode === 'reset-password') {
+        if (!passwordValidation.isValid) {
+          toast.error("Password doesn't meet security requirements");
+          setLoading(false);
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          toast.error("Passwords don't match");
+          setLoading(false);
+          return;
+        }
+
+        const { error } = await supabase.auth.updateUser({
+          password: password
+        });
+
+        if (error) {
+          toast.error("Failed to reset password. Please try again or request a new reset link.");
+          setLoading(false);
+          return;
+        }
+
+        toast.success("Password reset successfully! You can now sign in with your new password. 🎉");
+        setMode('login');
+        setPassword("");
+        setConfirmPassword("");
       }
     } catch (error: unknown) {
       console.error('Auth error:', error);
@@ -328,11 +365,13 @@ const Auth = () => {
               {mode === 'login' && "Welcome back"}
               {mode === 'signup' && "Join the movement"}
               {mode === 'forgot-password' && "Reset password"}
+              {mode === 'reset-password' && "Create new password"}
             </h1>
             <p className="text-muted-foreground text-sm">
               {mode === 'login' && "Sign in to continue thrifting"}
               {mode === 'signup' && "Start your sustainable fashion journey"}
               {mode === 'forgot-password' && "Enter your email to reset your password"}
+              {mode === 'reset-password' && "Enter your new password below"}
             </p>
           </div>
 
@@ -496,46 +535,122 @@ const Auth = () => {
 
             {mode !== 'signup' && (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="you@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="h-10 pl-10 bg-muted border-0 rounded-xl text-sm"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {mode !== 'forgot-password' && (
+                {mode === 'forgot-password' && (
                   <div className="space-y-2">
-                    <Label htmlFor="password" className="text-sm">Password</Label>
+                    <Label htmlFor="email" className="text-sm">Email</Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="h-10 pl-10 pr-10 bg-muted border-0 rounded-xl text-sm"
+                        id="email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="h-10 pl-10 bg-muted border-0 rounded-xl text-sm"
                         required
-                        minLength={6}
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
                     </div>
                   </div>
+                )}
+
+                {mode === 'login' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-sm">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="you@example.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="h-10 pl-10 bg-muted border-0 rounded-xl text-sm"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-sm">Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="h-10 pl-10 pr-10 bg-muted border-0 rounded-xl text-sm"
+                          required
+                          minLength={6}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {mode === 'reset-password' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-sm">New Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="h-10 pl-10 pr-10 bg-muted border-0 rounded-xl text-sm"
+                          required
+                          minLength={8}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword" className="text-sm">Confirm New Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="confirmPassword"
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          className="h-10 pl-10 pr-10 bg-muted border-0 rounded-xl text-sm"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      {confirmPassword && password !== confirmPassword && (
+                        <div className="text-xs text-red-500">Passwords don't match</div>
+                      )}
+                    </div>
+
+                    <PasswordStrengthIndicator password={password} />
+                  </>
                 )}
               </>
             )}
@@ -567,6 +682,7 @@ const Auth = () => {
                   {mode === 'login' && "Sign In"}
                   {mode === 'signup' && "Create Account"}
                   {mode === 'forgot-password' && "Send Reset Email"}
+                  {mode === 'reset-password' && "Reset Password"}
                 </>
               )}
             </Button>
@@ -603,6 +719,17 @@ const Auth = () => {
                   className="text-primary font-semibold hover:underline"
                 >
                   Sign in
+                </button>
+              </p>
+            )}
+            {mode === 'reset-password' && (
+              <p className="text-muted-foreground">
+                Password reset successful?{" "}
+                <button
+                  onClick={() => setMode('login')}
+                  className="text-primary font-semibold hover:underline"
+                >
+                  Sign in now
                 </button>
               </p>
             )}
