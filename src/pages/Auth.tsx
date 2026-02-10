@@ -95,8 +95,6 @@ const Auth = () => {
           // Handle specific Supabase auth errors
           if (error.message.includes('Invalid login credentials')) {
             toast.error("Invalid email or password. Please check your credentials.");
-          } else if (error.message.includes('Email not confirmed')) {
-            toast.error("Please check your email and click the confirmation link before signing in.");
           } else if (error.message.includes('Too many requests')) {
             toast.error("Too many login attempts. Please wait a few minutes and try again.");
           } else {
@@ -188,8 +186,9 @@ const Auth = () => {
           return;
         }
         
-        toast.success("Account created! Please check your email to confirm your account. 📧");
-        setEmailSent(true);
+        // Email confirmation disabled - instant login
+        toast.success("Account created successfully! Welcome to रीवस्त्र! 🎉");
+        navigate("/");
 
       } else if (mode === 'forgot-password') {
         if (!validateEmail(email)) {
