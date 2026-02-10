@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Send, Image, MoreVertical, ArrowLeft, Search, Check, CheckCheck, X 
+  Send, Image, ArrowLeft, Search, Check, CheckCheck, X 
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -298,6 +298,22 @@ const Messages = () => {
   const handleSendMessage = async () => {
     if ((!newMessage.trim() && !selectedImage) || !selectedConvo || !user) return;
     
+    const messageContent = newMessage.trim();
+    const tempId = `temp-${Date.now()}`;
+    
+    // Optimistic update - add message immediately to UI
+    const optimisticMessage: Message = {
+      id: tempId,
+      content: messageContent || '',
+      image_url: null,
+      sender_id: user.id,
+      created_at: new Date().toISOString(),
+      is_read: false,
+    };
+    
+    setMessages(prev => [...prev, optimisticMessage]);
+    setNewMessage(""); // Clear input immediately
+    
     let imageUrl: string | null = null;
 
     // Upload image if selected
@@ -321,23 +337,36 @@ const Messages = () => {
       } catch (error) {
         toast.error('Failed to upload image');
         setUploadingImage(false);
+        // Remove optimistic message on error
+        setMessages(prev => prev.filter(m => m.id !== tempId));
+        setNewMessage(messageContent); // Restore message
         return;
       }
       setUploadingImage(false);
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('messages')
       .insert({
         conversation_id: selectedConvo.id,
         sender_id: user.id,
-        content: newMessage.trim() || (imageUrl ? '' : ''),
+        content: messageContent || (imageUrl ? '' : ''),
         image_url: imageUrl,
-      });
+      })
+      .select()
+      .single();
 
     if (error) {
       toast.error('Failed to send message');
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      setNewMessage(messageContent); // Restore message
       return;
+    }
+
+    // Replace optimistic message with real one
+    if (data) {
+      setMessages(prev => prev.map(m => m.id === tempId ? data as Message : m));
     }
 
     // Update conversation last_message_at
@@ -346,7 +375,6 @@ const Messages = () => {
       .update({ last_message_at: new Date().toISOString() })
       .eq('id', selectedConvo.id);
 
-    setNewMessage("");
     cancelImage();
   };
 
@@ -371,8 +399,8 @@ const Messages = () => {
   return (
     <div className="min-h-screen bg-background dark">
       <Navbar />
-      <main className="pt-16 md:pt-20 h-screen flex">
-        <div className="container mx-auto px-0 md:px-4 flex h-[calc(100vh-4rem)] md:h-[calc(100vh-5rem)] overflow-hidden">
+      <main className="pt-16 md:pt-20 h-[100dvh] md:h-screen flex">
+        <div className="container mx-auto px-0 md:px-4 flex h-[calc(100dvh-4rem)] md:h-[calc(100vh-5rem)] overflow-hidden">
           {/* Conversations List */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -577,7 +605,7 @@ const Messages = () => {
                 </AnimatePresence>
 
                 {/* Input */}
-                <div className="p-2 md:p-4 border-t border-border bg-background">
+                <div className="p-2 md:p-4 border-t border-border bg-background sticky bottom-0 left-0 right-0 z-10">
                   <div className="flex gap-2 md:gap-3">
                     <input
                       type="file"
