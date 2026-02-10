@@ -45,18 +45,43 @@ const Auth = () => {
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const type = hashParams.get('type');
       const accessToken = hashParams.get('access_token');
+      const error = hashParams.get('error');
+      const errorCode = hashParams.get('error_code');
+      const errorDescription = hashParams.get('error_description');
       
       // Also check query params as fallback
       const queryType = searchParams.get('type');
+      const queryMode = searchParams.get('mode');
       
-      console.log('Auth URL check:', { type, queryType, accessToken: !!accessToken, hash: window.location.hash });
+      console.log('Auth URL check:', { 
+        type, 
+        queryType, 
+        queryMode,
+        accessToken: !!accessToken, 
+        error,
+        errorCode,
+        hash: window.location.hash 
+      });
+      
+      // Handle errors from Supabase
+      if (error || errorCode) {
+        if (errorCode === 'otp_expired' || error === 'access_denied') {
+          toast.error('Password reset link has expired. Please request a new one.');
+          setMode('forgot-password');
+        } else {
+          toast.error(errorDescription || 'An error occurred. Please try again.');
+        }
+        // Clear the hash
+        window.history.replaceState(null, '', window.location.pathname);
+        return;
+      }
       
       if (type === 'recovery' && accessToken) {
         console.log('Recovery mode detected, setting reset-password mode');
         setMode('reset-password');
         // Clear the hash to clean up URL but keep the session
         window.history.replaceState(null, '', window.location.pathname);
-      } else if (queryType === 'recovery') {
+      } else if (queryType === 'recovery' || queryMode === 'reset-password') {
         console.log('Query param recovery mode detected');
         setMode('reset-password');
       }
