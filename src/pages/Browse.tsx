@@ -25,6 +25,7 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import AtmosphericLayer from "@/components/AtmosphericLayer";
 
 interface Product {
   id: string;
@@ -169,7 +170,8 @@ const Browse = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background dark">
+    <div className="min-h-screen bg-background dark relative">
+      <AtmosphericLayer variant="section" />
       <Navbar />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">

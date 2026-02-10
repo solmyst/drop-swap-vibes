@@ -21,6 +21,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getCategorySizes } from "@/data/sizeOptions";
+import AtmosphericLayer from "@/components/AtmosphericLayer";
 
 const categories = ["Tops", "Bottoms", "Dresses", "Shoes", "Accessories", "Jewelry", "Outerwear", "Bags"];
 const conditions = ["New with Tags", "Like New", "Good", "Fair"];
@@ -188,7 +189,8 @@ const Upload = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background dark">
+    <div className="min-h-screen bg-background dark relative">
+      <AtmosphericLayer variant="section" />
       <Navbar />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">

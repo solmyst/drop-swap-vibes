@@ -168,3 +168,37 @@
     100% { transform: scale(1); }
   }
 }
+
+/* Thread drift animations — ultra-slow, GPU-accelerated */
+@keyframes threadDrift1 {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  25% { transform: translate3d(15px, -8px, 0) rotate(1deg); }
+  50% { transform: translate3d(-10px, 12px, 0) rotate(-0.5deg); }
+  75% { transform: translate3d(8px, -5px, 0) rotate(0.8deg); }
+}
+@keyframes threadDrift2 {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  33% { transform: translate3d(-12px, 10px, 0) rotate(-1deg); }
+  66% { transform: translate3d(10px, -15px, 0) rotate(0.7deg); }
+}
+@keyframes threadDrift3 {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  40% { transform: translate3d(20px, 5px, 0) rotate(1.2deg); }
+  80% { transform: translate3d(-8px, -10px, 0) rotate(-0.6deg); }
+}
+@keyframes fabricFloat {
+  0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.15; }
+  50% { transform: translate3d(6px, -8px, 0); opacity: 0.25; }
+}
+
+.thread-layer {
+  will-change: transform;
+}
+.thread-1 { animation: threadDrift1 38s ease-in-out infinite; }
+.thread-2 { animation: threadDrift2 42s ease-in-out infinite; }
+.thread-3 { animation: threadDrift3 35s ease-in-out infinite; }
+.fabric-particle { animation: fabricFloat 30s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .thread-layer, .fabric-particle { animation: none !important; }
+}
