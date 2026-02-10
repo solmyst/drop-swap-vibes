@@ -397,10 +397,10 @@ const Messages = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background dark">
+    <div className="fixed inset-0 bg-background dark flex flex-col">
       <Navbar />
-      <main className="pt-16 md:pt-20 h-[100dvh] md:h-screen flex">
-        <div className="container mx-auto px-0 md:px-4 flex h-[calc(100dvh-4rem)] md:h-[calc(100vh-5rem)] overflow-hidden">
+      <main className="flex-1 flex overflow-hidden pt-16 md:pt-20">
+        <div className="container mx-auto px-0 md:px-4 flex flex-1 overflow-hidden">
           {/* Conversations List */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -483,11 +483,11 @@ const Messages = () => {
           </motion.div>
 
           {/* Chat Area */}
-          <div className={`flex-1 flex flex-col bg-background min-h-0 ${!selectedConvo ? "hidden md:flex" : "flex"}`}>
+          <div className={`flex-1 flex flex-col bg-background overflow-hidden ${!selectedConvo ? "hidden md:flex" : "flex"}`}>
             {selectedConvo ? (
-              <div className="flex flex-col h-full">
+              <div className="flex flex-col h-full overflow-hidden">
                 {/* Chat Header */}
-                <div className="p-3 md:p-4 border-b border-border flex items-center gap-3 md:gap-4 bg-background shrink-0">
+                <div className="p-3 md:p-4 border-b border-border flex items-center gap-3 md:gap-4 bg-background flex-shrink-0">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -510,7 +510,7 @@ const Messages = () => {
 
                 {/* Listing Preview */}
                 {selectedConvo.listing && (
-                  <div className="p-2 md:p-3 border-b border-border bg-muted/30 shrink-0">
+                  <div className="p-2 md:p-3 border-b border-border bg-muted/30 flex-shrink-0">
                     <div className="flex items-center gap-2 md:gap-3">
                       <img
                         src={selectedConvo.listing.images?.[0] || '/placeholder.svg'}
@@ -526,7 +526,7 @@ const Messages = () => {
                 )}
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4 bg-background min-h-0">
+                <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4 bg-background">
                   {messages.length === 0 ? (
                     <div className="text-center text-muted-foreground py-8">
                       <p>No messages yet. Start the conversation!</p>
@@ -605,7 +605,7 @@ const Messages = () => {
                 </AnimatePresence>
 
                 {/* Input */}
-                <div className="p-2 md:p-4 border-t border-border bg-background shrink-0">
+                <div className="p-2 md:p-4 border-t border-border bg-background flex-shrink-0">
                   <div className="flex gap-2 md:gap-3">
                     <input
                       type="file"
