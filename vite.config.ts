@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? '/drop-swap-vibes/' : '/',
+  base: '/', // Using custom domain, so base is root
   server: {
     host: "::",
     port: 8080,
