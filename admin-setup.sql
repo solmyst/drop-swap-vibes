@@ -27,3 +27,6 @@ SELECT
 FROM auth.users 
 ORDER BY created_at DESC 
 LIMIT 10;
+
+-- for putting the roles
+INSERT INTO public.user_roles (user_id, role) VALUES ('YOUR_USER_ID_HERE', 'admin');

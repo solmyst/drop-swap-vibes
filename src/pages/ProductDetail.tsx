@@ -34,6 +34,8 @@ interface Product {
     avatar_url: string;
     is_verified: boolean;
     location: string | null;
+    city?: string | null;
+    state?: string | null;
     phone?: string | null;
     bio?: string | null;
   };
@@ -97,11 +99,28 @@ const ProductDetail = () => {
       }
 
       // Fetch seller profile with additional details
+      // Note: city and state columns may not exist yet - run add-city-state-fields.sql first
       const { data: profile } = await supabase
         .from('profiles')
         .select('username, avatar_url, is_verified, location, bio')
         .eq('user_id', listing.seller_id)
         .maybeSingle();
+
+      // Try to fetch city and state if columns exist
+      let city = null;
+      let state = null;
+      try {
+        const { data: locationData } = await supabase
+          .from('profiles')
+          .select('city, state')
+          .eq('user_id', listing.seller_id)
+          .maybeSingle() as any;
+        city = locationData?.city;
+        state = locationData?.state;
+      } catch (e) {
+        // Columns don't exist yet - that's okay
+        console.log('City/State columns not yet added to database');
+      }
 
       // Fetch private profile data if available
       const { data: privateData } = await supabase
@@ -116,9 +135,11 @@ const ProductDetail = () => {
           username: profile?.username || 'User',
           avatar_url: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${listing.seller_id}`,
           is_verified: profile?.is_verified || false,
-          location: profile?.location,
-          bio: profile?.bio,
-          phone: privateData?.phone,
+          location: profile?.location || null,
+          city: city,
+          state: state,
+          bio: profile?.bio || null,
+          phone: privateData?.phone || null,
         },
       });
       setLoading(false);
@@ -440,10 +461,13 @@ const ProductDetail = () => {
                         <Verified className="w-4 h-4 text-primary" />
                       )}
                     </div>
-                    {product.seller.location && (
+                    {(product.seller.city || product.seller.state || product.seller.location) && (
                       <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                         <MapPin className="w-4 h-4" />
-                        {showSellerDetails || isOwner ? product.seller.location : maskText(product.seller.location, 2)}
+                        {product.seller.city && product.seller.state 
+                          ? `${product.seller.city}, ${product.seller.state}`
+                          : product.seller.location || 'Location not specified'
+                        }
                       </div>
                     )}
                   </div>

@@ -69,7 +69,7 @@ const Hero = () => {
           </motion.div>
 
           {/* Social proof */}
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
@@ -80,7 +80,7 @@ const Hero = () => {
             <span>💬 <strong className="text-foreground">500+</strong> deals made</span>
             <span className="w-1 h-1 rounded-full bg-border hidden sm:block" />
             <span className="hidden sm:inline">♻️ <strong className="text-foreground">Zero</strong> waste</span>
-          </motion.div>
+          </motion.div> */}
         </div>
       </div>
     </section>
