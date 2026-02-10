@@ -40,10 +40,29 @@ const Auth = () => {
 
   // Check if we're in reset password mode from URL
   useEffect(() => {
-    const type = searchParams.get('type');
-    if (type === 'recovery') {
-      setMode('reset-password');
-    }
+    const checkRecoveryMode = async () => {
+      // Check for recovery token in URL hash (Supabase format)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const type = hashParams.get('type');
+      const accessToken = hashParams.get('access_token');
+      
+      // Also check query params as fallback
+      const queryType = searchParams.get('type');
+      
+      console.log('Auth URL check:', { type, queryType, accessToken: !!accessToken, hash: window.location.hash });
+      
+      if (type === 'recovery' && accessToken) {
+        console.log('Recovery mode detected, setting reset-password mode');
+        setMode('reset-password');
+        // Clear the hash to clean up URL but keep the session
+        window.history.replaceState(null, '', window.location.pathname);
+      } else if (queryType === 'recovery') {
+        console.log('Query param recovery mode detected');
+        setMode('reset-password');
+      }
+    };
+    
+    checkRecoveryMode();
   }, [searchParams]);
 
   // Password validation
