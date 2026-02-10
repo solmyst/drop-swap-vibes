@@ -20,8 +20,8 @@ const Footer = () => {
             </p>
             <div className="flex gap-2">
               {[
-                { Icon: Instagram, href: "#", label: "Instagram" },
-                { Icon: Twitter, href: "#", label: "Twitter" },
+                { Icon: Instagram, href: "https://www.instagram.com/revastra.me/", label: "Instagram" },
+                { Icon: Twitter, href: "https://x.com/revastra", label: "Twitter" },
               ].map(({ Icon, href, label }, i) => (
                 <a
                   key={i}
@@ -81,7 +81,7 @@ const Footer = () => {
         </div>
 
         <div className="pt-6 border-t border-border/30 flex flex-col md:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground">© 2025 रीवस्त्र. Sustainable fashion for all.</p>
+          <p className="text-xs text-muted-foreground">© 2026 रीवस्त्र. Sustainable fashion for all.</p>
           <div className="flex gap-5">
             <Link to="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Privacy</Link>
             <Link to="/terms" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Terms</Link>
