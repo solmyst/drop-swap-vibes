@@ -399,7 +399,7 @@ const Messages = () => {
   return (
     <div className="fixed inset-0 bg-background dark flex flex-col">
       <Navbar />
-      <main className="flex-1 flex overflow-hidden pt-16 md:pt-20">
+      <main className="flex-1 flex overflow-hidden pt-16 md:pt-20 pb-16 md:pb-0">
         <div className="container mx-auto px-0 md:px-4 flex flex-1 overflow-hidden">
           {/* Conversations List */}
           <motion.div
