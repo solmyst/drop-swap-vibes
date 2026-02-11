@@ -176,11 +176,11 @@ const ProductCard = ({
             </div>
           </div>
 
-          {/* Hover action - Chat or Edit/Sold buttons */}
+          {/* Hover action - Chat or Edit/Sold buttons - Desktop Only */}
           <motion.div
             initial={{ opacity: 0 }}
             whileHover={{ opacity: 1 }}
-            className="absolute inset-0 bg-foreground/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            className="hidden md:flex absolute inset-0 bg-foreground/20 items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
           >
             {isOwner && (onEdit || onMarkAsSold) ? (
               // Seller viewing their own listing with edit props - show edit buttons

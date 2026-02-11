@@ -495,7 +495,7 @@ const Messages = () => {
             </div>
 
             {/* Conversation List */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto scrollbar-thin">
               {loading ? (
                 <div className="p-8 flex justify-center">
                   <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -606,7 +606,7 @@ const Messages = () => {
                 )}
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4 bg-background">
+                <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4 bg-background scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
                   {messages.length === 0 ? (
                     <div className="text-center text-muted-foreground py-8">
                       <p>No messages yet. Start the conversation!</p>
@@ -636,7 +636,7 @@ const Messages = () => {
                           )}
                           {msg.content && (
                             <div className="px-3 py-2 md:px-4 md:py-2.5">
-                              <p className="text-sm md:text-base break-words">{msg.content}</p>
+                              <p className="text-sm md:text-base break-words whitespace-pre-wrap">{msg.content}</p>
                             </div>
                           )}
                           <div className={`flex items-center gap-1 px-3 pb-1.5 md:px-4 md:pb-2 ${

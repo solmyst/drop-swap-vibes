@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
-  LayoutDashboard, Users, Package, CreditCard, 
-  CheckCircle, XCircle, Clock, TrendingUp, Eye
+  LayoutDashboard, Users, Package, MessageCircle, Eye
 } from "lucide-react";
 import { useNavigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -18,8 +17,8 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalListings: 0,
-    pendingApproval: 0,
-    activePasses: 0,
+    activeListings: 0,
+    totalMessages: 0,
   });
 
   useEffect(() => {
@@ -42,25 +41,22 @@ const AdminDashboard = () => {
         .from('listings')
         .select('*', { count: 'exact', head: true });
 
-      // Fetch pending approval
-      const { count: pendingCount } = await supabase
+      // Fetch active listings
+      const { count: activeCount } = await supabase
         .from('listings')
         .select('*', { count: 'exact', head: true })
-        .eq('is_approved', false)
         .eq('status', 'active');
 
-      // Fetch active passes
-      const { count: passesCount } = await supabase
-        .from('user_passes')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true)
-        .gt('expires_at', new Date().toISOString());
+      // Fetch total messages
+      const { count: messagesCount } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true });
 
       setStats({
         totalUsers: usersCount || 0,
         totalListings: listingsCount || 0,
-        pendingApproval: pendingCount || 0,
-        activePasses: passesCount || 0,
+        activeListings: activeCount || 0,
+        totalMessages: messagesCount || 0,
       });
     };
 
@@ -83,8 +79,6 @@ const AdminDashboard = () => {
     { path: '/admin', icon: LayoutDashboard, label: 'Overview', exact: true },
     { path: '/admin/listings', icon: Package, label: 'Listings' },
     { path: '/admin/users', icon: Users, label: 'Users' },
-    { path: '/admin/passes', icon: CreditCard, label: 'Passes' },
-    { path: '/admin/transactions', icon: CreditCard, label: 'Transactions' },
   ];
 
   const isOverview = location.pathname === '/admin';
@@ -177,18 +171,18 @@ const AdminDashboard = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="glass border-amber-500/30">
+                <Card className="glass border-primary/30">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-amber-500">
-                      Pending Approval
+                    <CardTitle className="text-sm font-medium text-primary">
+                      Active Listings
                     </CardTitle>
-                    <Clock className="w-4 h-4 text-amber-500" />
+                    <Eye className="w-4 h-4 text-primary" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-amber-500">{stats.pendingApproval}</div>
-                    <Link to="/admin/listings?filter=pending">
+                    <div className="text-2xl font-bold text-primary">{stats.activeListings}</div>
+                    <Link to="/admin/listings?filter=active">
                       <Button variant="link" size="sm" className="p-0 h-auto text-xs">
-                        Review now →
+                        View all →
                       </Button>
                     </Link>
                   </CardContent>
@@ -197,28 +191,28 @@ const AdminDashboard = () => {
                 <Card className="glass">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Active Passes
+                      Total Messages
                     </CardTitle>
-                    <CreditCard className="w-4 h-4 text-muted-foreground" />
+                    <MessageCircle className="w-4 h-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stats.activePasses}</div>
+                    <div className="text-2xl font-bold">{stats.totalMessages}</div>
                   </CardContent>
                 </Card>
               </div>
 
               {/* Quick Actions */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Link to="/admin/listings?filter=pending">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Link to="/admin/listings">
                   <Card className="glass hover:border-primary/50 transition-colors cursor-pointer">
                     <CardContent className="flex items-center gap-4 p-6">
-                      <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                        <Eye className="w-6 h-6 text-amber-500" />
+                      <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                        <Package className="w-6 h-6 text-primary" />
                       </div>
                       <div>
-                        <h3 className="font-semibold">Review Listings</h3>
+                        <h3 className="font-semibold">Manage Listings</h3>
                         <p className="text-sm text-muted-foreground">
-                          {stats.pendingApproval} awaiting approval
+                          View all listings
                         </p>
                       </div>
                     </CardContent>
@@ -235,22 +229,6 @@ const AdminDashboard = () => {
                         <h3 className="font-semibold">Manage Users</h3>
                         <p className="text-sm text-muted-foreground">
                           View & manage accounts
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-
-                <Link to="/admin/passes">
-                  <Card className="glass hover:border-primary/50 transition-colors cursor-pointer">
-                    <CardContent className="flex items-center gap-4 p-6">
-                      <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
-                        <CreditCard className="w-6 h-6 text-green-500" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">Manage Passes</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Assign & revoke passes
                         </p>
                       </div>
                     </CardContent>
