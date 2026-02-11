@@ -4,6 +4,7 @@ import { Search, Heart, MessageCircle, Plus, Menu, X, User, LogOut, ShoppingBag,
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { ASSETS } from "@/lib/assets";
 import {
   DropdownMenu,
@@ -16,6 +17,7 @@ import {
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const unreadCount = useUnreadMessages();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -67,9 +69,14 @@ const Navbar = () => {
                 </Button>
               </Link>
               <Link to="/messages">
-                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground relative">
                   <MessageCircle className="w-4 h-4" />
                   Inbox
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full text-[10px] flex items-center justify-center text-primary-foreground font-bold">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
                 </Button>
               </Link>
             </div>
@@ -145,7 +152,7 @@ const Navbar = () => {
             </motion.div>
           </Link>
           
-          <MobileNavItem to="/messages" icon={MessageCircle} label="Inbox" active={location.pathname === '/messages'} />
+          <MobileNavItem to="/messages" icon={MessageCircle} label="Inbox" active={location.pathname === '/messages'} badge={unreadCount} />
           <MobileNavItem to={user ? "/profile" : "/auth"} icon={User} label={user ? "Profile" : "Sign In"} active={location.pathname === '/profile'} />
         </div>
       </div>
@@ -153,12 +160,17 @@ const Navbar = () => {
   );
 };
 
-const MobileNavItem = ({ to, icon: Icon, label, active }: { to: string; icon: React.ElementType; label: string; active: boolean }) => (
-  <Link to={to} className="flex flex-col items-center gap-0.5 min-w-[48px]">
+const MobileNavItem = ({ to, icon: Icon, label, active, badge }: { to: string; icon: React.ElementType; label: string; active: boolean; badge?: number }) => (
+  <Link to={to} className="flex flex-col items-center gap-0.5 min-w-[48px] relative">
     <Icon className={`w-5 h-5 transition-colors ${active ? 'text-primary' : 'text-muted-foreground'}`} />
     <span className={`text-[10px] font-medium transition-colors ${active ? 'text-primary' : 'text-muted-foreground'}`}>
       {label}
     </span>
+    {badge && badge > 0 && (
+      <span className="absolute -top-1 left-1/2 w-5 h-5 bg-primary rounded-full text-[10px] flex items-center justify-center text-primary-foreground font-bold">
+        {badge > 9 ? '9+' : badge}
+      </span>
+    )}
   </Link>
 );
 

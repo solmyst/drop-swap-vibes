@@ -147,6 +147,39 @@ const Messages = () => {
     };
 
     fetchConversations();
+
+    // Real-time subscription for conversations updates
+    const conversationsChannel = supabase
+      .channel('conversations-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'conversations',
+          filter: `buyer_id=eq.${user.id}`,
+        },
+        () => {
+          fetchConversations();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'conversations',
+          filter: `seller_id=eq.${user.id}`,
+        },
+        () => {
+          fetchConversations();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(conversationsChannel);
+    };
   }, [user, searchParams]);
 
   // Create new conversation
@@ -496,15 +529,20 @@ const Messages = () => {
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </Button>
-                  <img
-                    src={selectedConvo.other_user.avatar_url}
-                    alt={selectedConvo.other_user.username}
-                    className="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <span className="font-semibold text-sm md:text-base block truncate">{selectedConvo.other_user.username}</span>
-                    <p className="text-[10px] md:text-xs text-muted-foreground">Active now</p>
-                  </div>
+                  <button
+                    onClick={() => navigate(`/profile?user=${selectedConvo.other_user.id}`)}
+                    className="flex items-center gap-3 md:gap-4 flex-1 min-w-0 hover:opacity-80 transition-opacity"
+                  >
+                    <img
+                      src={selectedConvo.other_user.avatar_url}
+                      alt={selectedConvo.other_user.username}
+                      className="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover shrink-0"
+                    />
+                    <div className="flex-1 min-w-0 text-left">
+                      <span className="font-semibold text-sm md:text-base block truncate">{selectedConvo.other_user.username}</span>
+                      <p className="text-[10px] md:text-xs text-muted-foreground">Tap to view profile</p>
+                    </div>
+                  </button>
                   {/* Removed non-functional 3-dot menu button */}
                 </div>
 
