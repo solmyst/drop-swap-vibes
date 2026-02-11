@@ -365,7 +365,12 @@ const Messages = () => {
     }
   };
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if ((!newMessage.trim() && !selectedImage) || !selectedConvo || !user) return;
     
     const messageContent = newMessage.trim();
@@ -397,19 +402,25 @@ const Messages = () => {
           .from('chat-images')
           .upload(fileName, selectedImage);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('Image upload error:', uploadError);
+          throw uploadError;
+        }
 
         const { data: { publicUrl } } = supabase.storage
           .from('chat-images')
           .getPublicUrl(fileName);
 
         imageUrl = publicUrl;
+        console.log('Image uploaded successfully:', imageUrl);
       } catch (error) {
-        toast.error('Failed to upload image');
+        console.error('Failed to upload image:', error);
+        toast.error('Failed to upload image. Please try again.');
         setUploadingImage(false);
         // Remove optimistic message on error
         setMessages(prev => prev.filter(m => m.id !== tempId));
         setNewMessage(messageContent); // Restore message
+        cancelImage();
         return;
       }
       setUploadingImage(false);
@@ -427,6 +438,7 @@ const Messages = () => {
       .single();
 
     if (error) {
+      console.error('Message send error:', error);
       toast.error('Failed to send message');
       // Remove optimistic message on error
       setMessages(prev => prev.filter(m => m.id !== tempId));
@@ -708,7 +720,12 @@ const Messages = () => {
                         placeholder="Type a message..."
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                          }
+                        }}
                         className="bg-muted/50 border-0 rounded-full h-11 px-4 text-sm md:text-base pr-12 focus-visible:ring-1 focus-visible:ring-primary"
                       />
                     </div>
