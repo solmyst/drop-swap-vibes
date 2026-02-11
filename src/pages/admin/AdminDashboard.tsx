@@ -22,7 +22,9 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
+    console.log('🔐 Admin Dashboard - Auth state:', { isAdmin, loading });
     if (!loading && !isAdmin) {
+      console.log('❌ Not admin, redirecting to home');
       navigate('/');
     }
   }, [isAdmin, loading, navigate]);
