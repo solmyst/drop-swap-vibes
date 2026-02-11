@@ -213,20 +213,33 @@ const AdminUsers = () => {
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
 
-    const { error } = await supabase.rpc('delete_user_and_data', {
-      _user_id: selectedUser.user_id
-    });
+    try {
+      const { data, error } = await supabase.rpc('delete_user_and_data', {
+        _user_id: selectedUser.user_id
+      });
 
-    if (error) {
-      console.error('Delete error:', error);
-      toast.error('Failed to delete user');
-      return;
+      if (error) {
+        console.error('Delete error:', error);
+        
+        // Check if it's a function not found error
+        if (error.message.includes('function') || error.code === '42883') {
+          toast.error('Delete function not set up. Please run fix-user-deletion.sql in Supabase');
+        } else if (error.message.includes('permission')) {
+          toast.error('Permission denied. Make sure you are an admin.');
+        } else {
+          toast.error(`Failed to delete user: ${error.message}`);
+        }
+        return;
+      }
+
+      toast.success('User deleted successfully');
+      setShowDeleteDialog(false);
+      setSelectedUser(null);
+      fetchUsers();
+    } catch (err: any) {
+      console.error('Unexpected error:', err);
+      toast.error(`Error: ${err.message || 'Unknown error'}`);
     }
-
-    toast.success('User deleted successfully');
-    setShowDeleteDialog(false);
-    setSelectedUser(null);
-    fetchUsers();
   };
 
   const filteredUsers = users.filter(u =>
