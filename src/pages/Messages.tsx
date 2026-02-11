@@ -154,7 +154,7 @@ const Messages = () => {
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'conversations',
           filter: `buyer_id=eq.${user.id}`,
@@ -166,13 +166,47 @@ const Messages = () => {
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'conversations',
           filter: `seller_id=eq.${user.id}`,
         },
         () => {
           fetchConversations();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'conversations',
+          filter: `buyer_id=eq.${user.id}`,
+        },
+        (payload) => {
+          // Only update the specific conversation, don't refetch all
+          const updated = payload.new as any;
+          setConversations(prev => 
+            prev.map(c => c.id === updated.id ? { ...c, last_message_at: updated.last_message_at } : c)
+              .sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime())
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'conversations',
+          filter: `seller_id=eq.${user.id}`,
+        },
+        (payload) => {
+          // Only update the specific conversation, don't refetch all
+          const updated = payload.new as any;
+          setConversations(prev => 
+            prev.map(c => c.id === updated.id ? { ...c, last_message_at: updated.last_message_at } : c)
+              .sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime())
+          );
         }
       )
       .subscribe();
@@ -451,10 +485,21 @@ const Messages = () => {
       setMessages(prev => prev.map(m => m.id === tempId ? data as Message : m));
     }
 
-    // Update conversation last_message_at
+    // Update conversation last_message_at locally and in database
+    const now = new Date().toISOString();
+    setConversations(prev => 
+      prev.map(c => c.id === selectedConvo.id ? { 
+        ...c, 
+        last_message_at: now,
+        last_message: messageContent || (imageUrl ? '📷 Photo' : '')
+      } : c)
+        .sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime())
+    );
+
+    // Update in database (this will trigger realtime but we handle it efficiently now)
     await supabase
       .from('conversations')
-      .update({ last_message_at: new Date().toISOString() })
+      .update({ last_message_at: now })
       .eq('id', selectedConvo.id);
 
     cancelImage();
