@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Edit2, MapPin, Calendar, Star, Package, Heart, MessageCircle, Verified, Share2, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
@@ -58,6 +58,10 @@ const Profile = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   // const { benefits, usage: hookUsage } = usePassBenefits(); // COMMENTED OUT - Pass system removed
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const viewingUserId = searchParams.get('user'); // Get user ID from URL parameter
+  const isOwnProfile = !viewingUserId || viewingUserId === user?.id;
+  
   const [profile, setProfile] = useState<Profile | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   // const [userPass, setUserPass] = useState<UserPass | null>(null); // COMMENTED OUT - Pass system removed
@@ -77,7 +81,7 @@ const Profile = () => {
     if (user) {
       fetchAllData();
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, viewingUserId]);
 
   const fetchAllData = async () => {
     await Promise.all([
@@ -91,10 +95,12 @@ const Profile = () => {
   };
 
   const fetchProfile = async () => {
+    const targetUserId = viewingUserId || user!.id;
+    
     const { data } = await supabase
       .from('profiles')
       .select('*')
-      .eq('user_id', user!.id)
+      .eq('user_id', targetUserId)
       .maybeSingle();
 
     if (data) {
@@ -103,10 +109,12 @@ const Profile = () => {
   };
 
   const fetchListings = async () => {
+    const targetUserId = viewingUserId || user!.id;
+    
     const { data } = await supabase
       .from('listings')
       .select('*')
-      .eq('seller_id', user!.id)
+      .eq('seller_id', targetUserId)
       .order('created_at', { ascending: false });
 
     if (data) {
@@ -144,19 +152,23 @@ const Profile = () => {
   // };
 
   const fetchCounts = async () => {
-    // Wishlist count
-    const { count: wishlistC } = await supabase
-      .from('wishlist')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user!.id);
+    const targetUserId = viewingUserId || user!.id;
     
-    setWishlistCount(wishlistC || 0);
+    // Wishlist count - only show for own profile
+    if (isOwnProfile) {
+      const { count: wishlistC } = await supabase
+        .from('wishlist')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', targetUserId);
+      
+      setWishlistCount(wishlistC || 0);
+    }
 
     // Review count (reviews received as seller)
     const { count: reviewC } = await supabase
       .from('seller_reviews')
       .select('*', { count: 'exact', head: true })
-      .eq('seller_id', user!.id);
+      .eq('seller_id', targetUserId);
     
     setReviewCount(reviewC || 0);
   };
@@ -325,19 +337,23 @@ const Profile = () => {
                   </div>
                   
                   <div className="flex gap-2">
-                    <Link to="/edit-profile">
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <Edit2 className="w-4 h-4" />
-                        Edit Profile
-                      </Button>
-                    </Link>
+                    {isOwnProfile && (
+                      <>
+                        <Link to="/edit-profile">
+                          <Button variant="outline" size="sm" className="gap-2">
+                            <Edit2 className="w-4 h-4" />
+                            Edit Profile
+                          </Button>
+                        </Link>
+                        <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2">
+                          <LogOut className="w-4 h-4" />
+                          Sign Out
+                        </Button>
+                      </>
+                    )}
                     <Button variant="outline" size="sm" className="gap-2" onClick={handleShare}>
                       <Share2 className="w-4 h-4" />
                       Share
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2">
-                      <LogOut className="w-4 h-4" />
-                      Sign Out
                     </Button>
                   </div>
                 </div>
@@ -414,19 +430,32 @@ const Profile = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-4 mt-8 pt-6 border-t border-border">
-              {[
-                { label: "Listings", value: activeListings.length.toString(), icon: Package },
-                { label: "Sold", value: soldListings.length.toString(), icon: Star },
-                { label: "Wishlist", value: wishlistCount.toString(), icon: Heart },
-                { label: "Reviews", value: reviewCount.toString(), icon: MessageCircle },
-              ].map((stat, i) => (
-                <div key={i} className="text-center">
-                  <stat.icon className="w-5 h-5 text-primary mx-auto mb-2" />
-                  <div className="font-display font-bold text-xl">{stat.value}</div>
-                  <div className="text-xs text-muted-foreground">{stat.label}</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-border">
+              <div className="text-center p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+                <Package className="w-5 h-5 text-primary mx-auto mb-2" />
+                <div className="font-display font-bold text-2xl">{activeListings.length}</div>
+                <div className="text-xs text-muted-foreground mt-1">Active Listings</div>
+              </div>
+              
+              <div className="text-center p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+                <Star className="w-5 h-5 text-primary mx-auto mb-2" />
+                <div className="font-display font-bold text-2xl">{soldListings.length}</div>
+                <div className="text-xs text-muted-foreground mt-1">Sold Items</div>
+              </div>
+              
+              {isOwnProfile && (
+                <div className="text-center p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <Heart className="w-5 h-5 text-primary mx-auto mb-2" />
+                  <div className="font-display font-bold text-2xl">{wishlistCount}</div>
+                  <div className="text-xs text-muted-foreground mt-1">Wishlist</div>
                 </div>
-              ))}
+              )}
+              
+              <div className="text-center p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+                <MessageCircle className="w-5 h-5 text-primary mx-auto mb-2" />
+                <div className="font-display font-bold text-2xl">{reviewCount}</div>
+                <div className="text-xs text-muted-foreground mt-1">Reviews</div>
+              </div>
             </div>
           </motion.div>
 
@@ -439,14 +468,18 @@ const Profile = () => {
             <Tabs defaultValue="listings" className="w-full">
               <TabsList className="w-full justify-center bg-muted rounded-xl mb-6 p-1">
                 <TabsTrigger value="listings" className="rounded-lg">
-                  Active ({activeListings.length})
+                  {isOwnProfile ? `Active (${activeListings.length})` : `Listings (${activeListings.length})`}
                 </TabsTrigger>
-                <TabsTrigger value="drafts" className="rounded-lg">
-                  Drafts ({draftListings.length})
-                </TabsTrigger>
-                <TabsTrigger value="sold" className="rounded-lg">
-                  Sold ({soldListings.length})
-                </TabsTrigger>
+                {isOwnProfile && (
+                  <>
+                    <TabsTrigger value="drafts" className="rounded-lg">
+                      Drafts ({draftListings.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="sold" className="rounded-lg">
+                      Sold ({soldListings.length})
+                    </TabsTrigger>
+                  </>
+                )}
                 {/* COMMENTED OUT - Pass system removed */}
                 {/* <TabsTrigger value="pass" className="rounded-lg">
                   <Crown className="w-4 h-4 mr-1" />
@@ -461,11 +494,17 @@ const Profile = () => {
                 {activeListings.length === 0 ? (
                   <div className="glass rounded-2xl p-8 text-center">
                     <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="font-display font-semibold text-lg mb-2">No listings yet</h3>
-                    <p className="text-muted-foreground mb-4">Start selling your pre-loved fashion!</p>
-                    <Button variant="hero" onClick={() => navigate('/upload')}>
-                      Create Your First Listing
-                    </Button>
+                    <h3 className="font-display font-semibold text-lg mb-2">
+                      {isOwnProfile ? 'No listings yet' : 'No active listings'}
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      {isOwnProfile ? 'Start selling your pre-loved fashion!' : 'This user has no active listings at the moment.'}
+                    </p>
+                    {isOwnProfile && (
+                      <Button variant="hero" onClick={() => navigate('/upload')}>
+                        Create Your First Listing
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
@@ -482,16 +521,16 @@ const Profile = () => {
                           price={Number(listing.price)}
                           image={listing.images?.[0] || "/placeholder.svg"}
                           seller={{
-                            name: "you",
-                            avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`,
+                            name: isOwnProfile ? "you" : profile?.username || "User",
+                            avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${viewingUserId || user?.id}`,
                             verified: profile?.is_verified || false,
                           }}
-                          sellerId={user?.id}
+                          sellerId={viewingUserId || user?.id}
                           condition={listing.condition}
                           size={listing.size}
                           category={listing.category}
-                          onEdit={() => handleEditListing(listing)}
-                          onMarkAsSold={() => handleMarkAsSold(listing.id)}
+                          onEdit={isOwnProfile ? () => handleEditListing(listing) : undefined}
+                          onMarkAsSold={isOwnProfile ? () => handleMarkAsSold(listing.id) : undefined}
                         />
                       </motion.div>
                     ))}
@@ -499,92 +538,96 @@ const Profile = () => {
                 )}
               </TabsContent>
 
-              <TabsContent value="drafts">
-                {draftListings.length === 0 ? (
-                  <div className="glass rounded-2xl p-8 text-center">
-                    <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="font-display font-semibold text-lg mb-2">No drafts</h3>
-                    <p className="text-muted-foreground mb-4">Draft listings will appear here</p>
-                    <Button variant="outline" onClick={() => navigate('/upload')}>
-                      Create New Listing
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                    {draftListings.map((listing, index) => (
-                      <motion.div
-                        key={listing.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                      >
-                        <div className="relative">
-                          <ProductCard
-                            id={listing.id}
-                            title={listing.title}
-                            price={Number(listing.price)}
-                            image={listing.images?.[0] || "/placeholder.svg"}
-                            seller={{
-                              name: "you",
-                              avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`,
-                              verified: profile?.is_verified || false,
-                            }}
-                            sellerId={user?.id}
-                            condition={listing.condition}
-                            size={listing.size}
-                            category={listing.category}
-                            onEdit={() => handleEditListing(listing)}
-                          />
-                          {/* Draft overlay */}
-                          <div className="absolute top-2 left-2 z-10">
-                            <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">
-                              Draft
-                            </Badge>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
+              {isOwnProfile && (
+                <>
+                  <TabsContent value="drafts">
+                    {draftListings.length === 0 ? (
+                      <div className="glass rounded-2xl p-8 text-center">
+                        <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="font-display font-semibold text-lg mb-2">No drafts</h3>
+                        <p className="text-muted-foreground mb-4">Draft listings will appear here</p>
+                        <Button variant="outline" onClick={() => navigate('/upload')}>
+                          Create New Listing
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                        {draftListings.map((listing, index) => (
+                          <motion.div
+                            key={listing.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                          >
+                            <div className="relative">
+                              <ProductCard
+                                id={listing.id}
+                                title={listing.title}
+                                price={Number(listing.price)}
+                                image={listing.images?.[0] || "/placeholder.svg"}
+                                seller={{
+                                  name: "you",
+                                  avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`,
+                                  verified: profile?.is_verified || false,
+                                }}
+                                sellerId={user?.id}
+                                condition={listing.condition}
+                                size={listing.size}
+                                category={listing.category}
+                                onEdit={() => handleEditListing(listing)}
+                              />
+                              {/* Draft overlay */}
+                              <div className="absolute top-2 left-2 z-10">
+                                <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">
+                                  Draft
+                                </Badge>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
 
-              <TabsContent value="sold">
-                {soldListings.length === 0 ? (
-                  <div className="glass rounded-2xl p-8 text-center">
-                    <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="font-display font-semibold text-lg mb-2">No sold items yet</h3>
-                    <p className="text-muted-foreground">Items you sell will appear here</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                    {soldListings.map((listing, index) => (
-                      <motion.div
-                        key={listing.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                      >
-                        <ProductCard
-                          id={listing.id}
-                          title={listing.title}
-                          price={Number(listing.price)}
-                          image={listing.images?.[0] || "/placeholder.svg"}
-                          seller={{
-                            name: "you",
-                            avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`,
-                            verified: profile?.is_verified || false,
-                          }}
-                          sellerId={user?.id}
-                          condition={listing.condition}
-                          size={listing.size}
-                          category={listing.category}
-                          onEdit={() => handleEditListing(listing)}
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
+                  <TabsContent value="sold">
+                    {soldListings.length === 0 ? (
+                      <div className="glass rounded-2xl p-8 text-center">
+                        <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="font-display font-semibold text-lg mb-2">No sold items yet</h3>
+                        <p className="text-muted-foreground">Items you sell will appear here</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                        {soldListings.map((listing, index) => (
+                          <motion.div
+                            key={listing.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                          >
+                            <ProductCard
+                              id={listing.id}
+                              title={listing.title}
+                              price={Number(listing.price)}
+                              image={listing.images?.[0] || "/placeholder.svg"}
+                              seller={{
+                                name: "you",
+                                avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`,
+                                verified: profile?.is_verified || false,
+                              }}
+                              sellerId={user?.id}
+                              condition={listing.condition}
+                              size={listing.size}
+                              category={listing.category}
+                              onEdit={() => handleEditListing(listing)}
+                            />
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+                </>
+              )}
 
               {/* COMMENTED OUT - Pass system removed */}
               {/* <TabsContent value="pass">
@@ -592,7 +635,7 @@ const Profile = () => {
               </TabsContent> */}
 
               <TabsContent value="reviews">
-                <SellerReviews sellerId={user?.id || ''} />
+                <SellerReviews sellerId={viewingUserId || user?.id || ''} />
               </TabsContent>
             </Tabs>
           </motion.div>
@@ -601,7 +644,7 @@ const Profile = () => {
       <Footer />
 
       {/* Edit Listing Modal */}
-      {editingListing && (
+      {isOwnProfile && editingListing && (
         <EditListingModal
           listing={editingListing}
           isOpen={isEditModalOpen}

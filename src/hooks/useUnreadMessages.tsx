@@ -26,7 +26,7 @@ export const useUnreadMessages = () => {
 
       const conversationIds = conversations.map(c => c.id);
 
-      // Count unread messages across all conversations
+      // Count ONLY unread messages (is_read = false) that are not from current user
       const { count } = await supabase
         .from('messages')
         .select('*', { count: 'exact', head: true })
@@ -39,9 +39,9 @@ export const useUnreadMessages = () => {
 
     fetchUnreadCount();
 
-    // Real-time subscription for new messages
+    // Real-time subscription for new messages and updates
     const channel = supabase
-      .channel('unread-messages')
+      .channel('unread-messages-updates')
       .on(
         'postgres_changes',
         {
@@ -49,8 +49,11 @@ export const useUnreadMessages = () => {
           schema: 'public',
           table: 'messages',
         },
-        () => {
-          fetchUnreadCount();
+        (payload) => {
+          // Only increment if message is not from current user
+          if (payload.new && (payload.new as any).sender_id !== user.id) {
+            fetchUnreadCount();
+          }
         }
       )
       .on(
@@ -61,6 +64,7 @@ export const useUnreadMessages = () => {
           table: 'messages',
         },
         () => {
+          // Refetch when messages are marked as read
           fetchUnreadCount();
         }
       )

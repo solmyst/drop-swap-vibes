@@ -3,12 +3,14 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Heart, MessageCircle, Share2, Verified, ChevronLeft, ChevronRight, 
-  MapPin, Clock, ArrowLeft, Lock, Eye, EyeOff, Crown, Tag, DollarSign, Star
+  MapPin, Clock, ArrowLeft, Tag, DollarSign, Star,
+  Edit2, CheckCircle, Trash2
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import ReviewModal from "@/components/ReviewModal";
+import EditListingModal from "@/components/EditListingModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
@@ -73,6 +75,7 @@ const ProductDetail = () => {
   const [similarProductsLoading, setSimilarProductsLoading] = useState(false);
   const [recommendationType, setRecommendationType] = useState<'category' | 'price'>('category');
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // COMMENTED OUT - Pass system removed - Show seller details to everyone
   // // Check if user has any buyer pass or is the seller
@@ -355,6 +358,51 @@ const ProductDetail = () => {
     toast.success('Thank you for your review!');
   };
 
+  const handleMarkAsSold = async () => {
+    if (!confirm('Mark this item as sold?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .update({ status: 'sold' })
+        .eq('id', product.id);
+
+      if (error) throw error;
+
+      toast.success('Item marked as sold! 🎉');
+      navigate('/profile');
+    } catch (error) {
+      console.error('Error marking item as sold:', error);
+      toast.error('Failed to mark item as sold');
+    }
+  };
+
+  const handleDeleteListing = async () => {
+    if (!confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .update({ status: 'deleted' })
+        .eq('id', product.id);
+
+      if (error) throw error;
+
+      toast.success('Listing deleted successfully!');
+      navigate('/profile');
+    } catch (error) {
+      console.error('Error deleting listing:', error);
+      toast.error('Failed to delete listing');
+    }
+  };
+
+  const handleUpdateListing = () => {
+    // Refresh product data after update
+    window.location.reload();
+  };
+
   const maskText = (text: string, visibleChars: number = 2) => {
     if (text.length <= visibleChars) return '*'.repeat(text.length);
     return text.substring(0, visibleChars) + '*'.repeat(text.length - visibleChars);
@@ -590,7 +638,47 @@ const ProductDetail = () => {
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                {/* Only show chat button if user is not the seller */}
+                {/* Seller Actions - Edit, Mark as Sold, Delete */}
+                {isOwner && (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button
+                        variant="default"
+                        size="lg"
+                        className="gap-2"
+                        onClick={() => setIsEditModalOpen(true)}
+                      >
+                        <Edit2 className="w-5 h-5" />
+                        Edit Listing
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="gap-2"
+                        onClick={handleMarkAsSold}
+                      >
+                        <CheckCircle className="w-5 h-5" />
+                        Mark as Sold
+                      </Button>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="lg"
+                      className="w-full gap-2"
+                      onClick={handleDeleteListing}
+                    >
+                      <Trash2 className="w-5 h-5" />
+                      Delete Listing
+                    </Button>
+                    <div className="text-center py-2 px-4 rounded-xl bg-muted/50">
+                      <p className="text-xs text-muted-foreground">
+                        This is your listing. Buyers will see a chat button here.
+                      </p>
+                    </div>
+                  </>
+                )}
+                
+                {/* Buyer Actions - Chat */}
                 {!isOwner && (
                   <Button
                     variant="hero"
@@ -598,54 +686,38 @@ const ProductDetail = () => {
                     className="w-full gap-2"
                     onClick={handleChat}
                   >
-                    {/* COMMENTED OUT - Pass system removed - Chat is always free */}
-                    {/* {hasBuyerPass || !user ? ( */}
-                      <>
-                        <MessageCircle className="w-5 h-5" />
-                        Chat with Seller
-                      </>
-                    {/* ) : (
-                      <>
-                        <Lock className="w-5 h-5" />
-                        Unlock Chat - Buy Pass
-                      </>
-                    )} */}
+                    <MessageCircle className="w-5 h-5" />
+                    Chat with Seller
                   </Button>
                 )}
                 
-                {/* Show different message for seller viewing their own product */}
-                {isOwner && (
-                  <div className="text-center py-4 px-6 rounded-xl bg-muted">
-                    <p className="text-sm text-muted-foreground">
-                      This is your listing. Buyers will see a chat button here.
-                    </p>
-                  </div>
-                )}
-                
+                {/* Common Actions - Share, Wishlist, Review */}
                 <div className="flex gap-3">
                   <Button variant="outline" size="lg" className="flex-1 gap-2" onClick={handleShare}>
                     <Share2 className="w-5 h-5" />
                     Share
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="flex-1 gap-2"
-                    onClick={handleWishlist}
-                  >
-                    <Heart className={`w-5 h-5 ${isLiked ? "fill-primary text-primary" : ""}`} />
-                    {isLiked ? "Saved" : "Save"}
-                  </Button>
                   {!isOwner && (
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="flex-1 gap-2"
-                      onClick={handleOpenReviewModal}
-                    >
-                      <Star className="w-5 h-5" />
-                      Review
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="flex-1 gap-2"
+                        onClick={handleWishlist}
+                      >
+                        <Heart className={`w-5 h-5 ${isLiked ? "fill-primary text-primary" : ""}`} />
+                        {isLiked ? "Saved" : "Save"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="flex-1 gap-2"
+                        onClick={handleOpenReviewModal}
+                      >
+                        <Star className="w-5 h-5" />
+                        Review
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>
@@ -764,6 +836,27 @@ const ProductDetail = () => {
         onClose={() => setIsReviewModalOpen(false)}
         onReviewSubmitted={handleReviewSubmitted}
       />
+
+      {/* Edit Listing Modal */}
+      {product && (
+        <EditListingModal
+          listing={{
+            id: product.id,
+            title: product.title,
+            description: product.description || '',
+            price: product.price,
+            images: product.images,
+            condition: product.condition,
+            size: product.size,
+            category: product.category,
+            brand: product.brand || '',
+            status: 'active',
+          }}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onUpdate={handleUpdateListing}
+        />
+      )}
     </div>
   );
 };

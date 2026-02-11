@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, SlidersHorizontal, X, Package } from "lucide-react";
+import { Search, Package } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
@@ -14,15 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Slider } from "@/components/ui/slider";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AtmosphericLayer from "@/components/AtmosphericLayer";
@@ -48,9 +39,6 @@ interface Product {
 const Browse = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [priceRange, setPriceRange] = useState([0, 5000]);
-  const [selectedCondition, setSelectedCondition] = useState<string | null>(null);
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("newest");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,6 +68,9 @@ const Browse = () => {
         throw listingsError;
       }
 
+      console.log('✅ Fetched listings:', listingsData?.length || 0);
+      console.log('📋 Listings data:', listingsData);
+
       if (!listingsData || listingsData.length === 0) {
         setProducts([]);
         return;
@@ -87,6 +78,7 @@ const Browse = () => {
 
       // Get unique seller IDs
       const sellerIds = [...new Set(listingsData.map(listing => listing.seller_id))];
+      console.log('👥 Unique seller IDs:', sellerIds);
       
       // Fetch profiles for all sellers
       const { data: profilesData, error: profilesError } = await supabase
@@ -95,8 +87,10 @@ const Browse = () => {
         .in('user_id', sellerIds);
 
       if (profilesError) {
-        console.error('Profiles error:', profilesError);
+        console.error('❌ Profiles error:', profilesError);
         // Continue without profiles data
+      } else {
+        console.log('👤 Profiles fetched:', profilesData?.length || 0);
       }
 
       // Create a map of user_id to profile
@@ -113,6 +107,8 @@ const Browse = () => {
         profiles: profilesMap.get(listing.seller_id) || null
       }));
 
+      console.log('✨ Products with profiles:', productsWithProfiles.length);
+      console.log('📦 Final products:', productsWithProfiles);
       setProducts(productsWithProfiles as unknown as Product[]);
     } catch (error) {
       console.error('Error fetching listings:', error);
@@ -122,38 +118,19 @@ const Browse = () => {
     }
   };
 
-  const activeFilters = [
-    selectedCategory !== "all" && `Category: ${selectedCategory}`,
-    selectedCondition && `Condition: ${selectedCondition}`,
-    selectedSize && `Size: ${selectedSize}`,
-    (priceRange[0] > 0 || priceRange[1] < 5000) && `₹${priceRange[0]} - ₹${priceRange[1]}`,
-  ].filter(Boolean);
-
-  const clearFilters = () => {
-    setSelectedCategory("all");
-    setSelectedCondition(null);
-    setSelectedSize(null);
-    setPriceRange([0, 5000]);
-  };
-
   const filteredProducts = products.filter(product => {
     if (searchQuery && !product.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+      console.log(`🔍 Filtered out by search: ${product.title}`);
       return false;
     }
     if (selectedCategory !== "all" && product.category.toLowerCase() !== selectedCategory.toLowerCase()) {
-      return false;
-    }
-    if (selectedCondition && product.condition !== selectedCondition) {
-      return false;
-    }
-    if (selectedSize && product.size !== selectedSize) {
-      return false;
-    }
-    if (product.price < priceRange[0] || product.price > priceRange[1]) {
+      console.log(`🏷️ Filtered out by category: ${product.title} (${product.category} !== ${selectedCategory})`);
       return false;
     }
     return true;
   });
+
+  console.log(`🎯 Filtered products: ${filteredProducts.length} out of ${products.length}`);
 
   // Sort products
   const sortedProducts = [...filteredProducts].sort((a, b) => {
@@ -189,7 +166,7 @@ const Browse = () => {
             </p>
           </motion.div>
 
-          {/* Search & Filter Bar */}
+          {/* Search & Sort Bar */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -207,119 +184,23 @@ const Browse = () => {
                 maxLength={100}
               />
             </div>
-            <div className="flex gap-3">
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[160px] h-12 bg-muted border-0 rounded-xl">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest First</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="lg" className="gap-2 h-12 relative z-10">
-                    <SlidersHorizontal className="w-4 h-4" />
-                    Filters
-                    {activeFilters.length > 0 && (
-                      <Badge className="ml-1 bg-primary text-primary-foreground">
-                        {activeFilters.length}
-                      </Badge>
-                    )}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-                  <SheetHeader>
-                    <SheetTitle>Filter Products</SheetTitle>
-                  </SheetHeader>
-                  <div className="space-y-6 mt-6">
-                    {/* Price Range */}
-                    <div>
-                      <label className="text-sm font-medium mb-3 block">
-                        Price Range: ₹{priceRange[0]} - ₹{priceRange[1]}
-                      </label>
-                      <Slider
-                        value={priceRange}
-                        onValueChange={setPriceRange}
-                        max={5000}
-                        step={100}
-                        className="w-full"
-                      />
-                    </div>
-
-                    {/* Condition */}
-                    <div>
-                      <label className="text-sm font-medium mb-3 block">Condition</label>
-                      <Select value={selectedCondition || ""} onValueChange={(value) => setSelectedCondition(value || null)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Any condition" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">Any condition</SelectItem>
-                          <SelectItem value="New">New</SelectItem>
-                          <SelectItem value="Like New">Like New</SelectItem>
-                          <SelectItem value="Good">Good</SelectItem>
-                          <SelectItem value="Used">Used</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Size */}
-                    <div>
-                      <label className="text-sm font-medium mb-3 block">Size</label>
-                      <Select value={selectedSize || ""} onValueChange={(value) => setSelectedSize(value || null)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Any size" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">Any size</SelectItem>
-                          <SelectItem value="XS">XS</SelectItem>
-                          <SelectItem value="S">S</SelectItem>
-                          <SelectItem value="M">M</SelectItem>
-                          <SelectItem value="L">L</SelectItem>
-                          <SelectItem value="XL">XL</SelectItem>
-                          <SelectItem value="XXL">XXL</SelectItem>
-                          <SelectItem value="One Size">One Size</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {activeFilters.length > 0 && (
-                      <Button variant="outline" onClick={clearFilters} className="w-full">
-                        Clear All Filters
-                      </Button>
-                    )}
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full md:w-[160px] h-12 bg-muted border-0 rounded-xl">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="price-low">Price: Low to High</SelectItem>
+                <SelectItem value="price-high">Price: High to Low</SelectItem>
+              </SelectContent>
+            </Select>
           </motion.div>
-
-          {/* Active Filters */}
-          {activeFilters.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex flex-wrap gap-2 mb-6"
-            >
-              {activeFilters.map((filter, index) => (
-                <Badge key={index} variant="secondary" className="gap-2">
-                  {filter}
-                  <X className="w-3 h-3 cursor-pointer" onClick={clearFilters} />
-                </Badge>
-              ))}
-            </motion.div>
-          )}
 
           {/* Category Pills */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.2 }}
             className="mb-8"
           >
             <CategoryPills 
@@ -342,7 +223,7 @@ const Browse = () => {
               <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-display text-xl font-semibold mb-2">No products found</h3>
               <p className="text-muted-foreground mb-6">
-                {searchQuery || activeFilters.length > 0 
+                {searchQuery || selectedCategory !== "all" 
                   ? "Try adjusting your search or filters" 
                   : "Be the first to list your pre-loved fashion!"}
               </p>

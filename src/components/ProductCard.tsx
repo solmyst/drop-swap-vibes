@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Eye, Verified } from "lucide-react";
+import { Heart, MessageCircle, Eye, Verified, Edit2, CheckCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 interface ProductCardProps {
   id: number | string;
@@ -34,15 +35,21 @@ const ProductCard = ({
   originalPrice,
   image,
   seller,
+  sellerId,
   condition,
   size,
   isNew,
   isFeatured,
+  onEdit,
+  onMarkAsSold,
   variant = 'default',
 }: ProductCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  
+  // Check if current user is the seller
+  const isOwner = user?.id === sellerId;
 
   const discount = originalPrice
     ? Math.round(((originalPrice - price) / originalPrice) * 100)
@@ -64,6 +71,10 @@ const ProductCard = ({
     e.stopPropagation();
     if (!user) {
       navigate('/auth');
+      return;
+    }
+    // Don't allow sellers to chat with themselves
+    if (isOwner) {
       return;
     }
     navigate(`/messages?product=${id}`);
@@ -165,20 +176,62 @@ const ProductCard = ({
             </div>
           </div>
 
-          {/* Hover action - Chat */}
+          {/* Hover action - Chat or Edit/Sold buttons */}
           <motion.div
             initial={{ opacity: 0 }}
             whileHover={{ opacity: 1 }}
             className="absolute inset-0 bg-foreground/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
           >
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={handleChat}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-background/90 backdrop-blur-md text-foreground text-sm font-medium shadow-elevated"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Chat with seller
-            </motion.button>
+            {isOwner && (onEdit || onMarkAsSold) ? (
+              // Seller viewing their own listing with edit props - show edit buttons
+              <div className="flex flex-col gap-2 px-4">
+                {onEdit && (
+                  <Button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onEdit();
+                    }}
+                    variant="secondary"
+                    size="sm"
+                    className="gap-2 bg-background/90 backdrop-blur-md hover:bg-background shadow-elevated"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Edit Listing
+                  </Button>
+                )}
+                {onMarkAsSold && (
+                  <Button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onMarkAsSold();
+                    }}
+                    variant="default"
+                    size="sm"
+                    className="gap-2 shadow-elevated"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Mark as Sold
+                  </Button>
+                )}
+              </div>
+            ) : isOwner ? (
+              // Seller viewing their own listing without edit props (Browse page) - show nothing or "Your Listing"
+              <div className="px-4 py-2 rounded-xl bg-background/90 backdrop-blur-md text-foreground text-sm font-medium shadow-elevated">
+                Your Listing
+              </div>
+            ) : (
+              // Buyer viewing listing - show chat button
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={handleChat}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-background/90 backdrop-blur-md text-foreground text-sm font-medium shadow-elevated"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Chat with seller
+              </motion.button>
+            )}
           </motion.div>
         </div>
       </motion.div>

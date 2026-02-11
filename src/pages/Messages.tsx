@@ -262,21 +262,39 @@ const Messages = () => {
         .eq('conversation_id', selectedConvo.id)
         .order('created_at', { ascending: true });
 
-      if (!error && data) {
+      if (error) {
+        console.error('❌ Error fetching messages:', error);
+        return;
+      }
+
+      if (data) {
         setMessages(data);
+        console.log(`📨 Fetched ${data.length} messages for conversation ${selectedConvo.id}`);
         
         // Mark messages as read
-        await supabase
-          .from('messages')
-          .update({ is_read: true })
-          .eq('conversation_id', selectedConvo.id)
-          .neq('sender_id', user.id);
+        const unreadMessages = data.filter(m => m.sender_id !== user.id && !m.is_read);
+        console.log(`📖 Marking ${unreadMessages.length} messages as read`);
+        
+        if (unreadMessages.length > 0) {
+          const { error: updateError } = await supabase
+            .from('messages')
+            .update({ is_read: true })
+            .eq('conversation_id', selectedConvo.id)
+            .neq('sender_id', user.id)
+            .eq('is_read', false);
+
+          if (updateError) {
+            console.error('❌ Error marking messages as read:', updateError);
+          } else {
+            console.log('✅ Messages marked as read successfully');
+          }
+        }
       }
     };
 
     fetchMessages();
 
-    // Subscribe to new messages
+    // Subscribe to new messages in real-time
     const channel = supabase
       .channel(`messages:${selectedConvo.id}`)
       .on(
@@ -289,7 +307,13 @@ const Messages = () => {
         },
         (payload) => {
           const newMsg = payload.new as Message;
-          setMessages(prev => [...prev, newMsg]);
+          setMessages(prev => {
+            // Avoid duplicates
+            if (prev.some(m => m.id === newMsg.id)) {
+              return prev;
+            }
+            return [...prev, newMsg];
+          });
           
           // Mark as read if not from current user
           if (newMsg.sender_id !== user.id) {
@@ -298,6 +322,19 @@ const Messages = () => {
               .update({ is_read: true })
               .eq('id', newMsg.id);
           }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${selectedConvo.id}`,
+        },
+        (payload) => {
+          const updatedMsg = payload.new as Message;
+          setMessages(prev => prev.map(m => m.id === updatedMsg.id ? updatedMsg : m));
         }
       )
       .subscribe();
@@ -530,7 +567,12 @@ const Messages = () => {
                     <ArrowLeft className="w-5 h-5" />
                   </Button>
                   <button
-                    onClick={() => navigate(`/profile?user=${selectedConvo.other_user.id}`)}
+                    onClick={() => {
+                      // Navigate to the other user's profile, not your own
+                      if (selectedConvo.other_user.id !== user?.id) {
+                        navigate(`/profile?user=${selectedConvo.other_user.id}`);
+                      }
+                    }}
                     className="flex items-center gap-3 md:gap-4 flex-1 min-w-0 hover:opacity-80 transition-opacity"
                   >
                     <img
