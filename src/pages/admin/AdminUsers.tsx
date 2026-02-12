@@ -42,6 +42,7 @@ interface User {
   username: string | null;
   full_name: string | null;
   avatar_url: string | null;
+  email: string;
   is_verified: boolean | null;
   is_blocked: boolean | null;
   created_at: string;
@@ -80,8 +81,16 @@ const AdminUsers = () => {
       return;
     }
 
-    // Fetch roles for these users
+    // Fetch emails from auth.users
     const userIds = profiles?.map(p => p.user_id) || [];
+    const emailPromises = userIds.map(async (userId) => {
+      const { data } = await supabase.auth.admin.getUserById(userId);
+      return { userId, email: data?.user?.email || 'N/A' };
+    });
+    const emailResults = await Promise.all(emailPromises);
+    const emailMap = new Map(emailResults.map(e => [e.userId, e.email]));
+
+    // Fetch roles for these users
     const { data: roles } = await supabase
       .from('user_roles')
       .select('user_id, role')
@@ -111,6 +120,7 @@ const AdminUsers = () => {
 
     const enrichedUsers = (profiles || []).map(profile => ({
       ...profile,
+      email: emailMap.get(profile.user_id) || 'N/A',
       role: roleMap.get(profile.user_id) || 'user',
       activePass: passMap.get(profile.user_id) || null,
       listingsCount: listingCounts.get(profile.user_id) || 0,
@@ -285,6 +295,7 @@ const AdminUsers = () => {
           <TableHeader>
             <TableRow>
               <TableHead>User</TableHead>
+              <TableHead>Email</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Pass</TableHead>
               <TableHead>Listings</TableHead>
@@ -295,7 +306,7 @@ const AdminUsers = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
+                <TableCell colSpan={7} className="text-center py-8">
                   <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
                 </TableCell>
               </TableRow>
@@ -328,6 +339,9 @@ const AdminUsers = () => {
                         <span className="text-sm text-muted-foreground">{user.full_name}</span>
                       </div>
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-muted-foreground">{user.email}</span>
                   </TableCell>
                   <TableCell>
                     <Badge variant={
