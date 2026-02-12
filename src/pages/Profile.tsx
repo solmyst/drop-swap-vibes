@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Edit2, MapPin, Calendar, Star, Package, Heart, MessageCircle, Verified, Share2, LogOut } from "lucide-react";
+import { Edit2, MapPin, Calendar, Star, Package, Heart, MessageCircle, Verified, Share2, LogOut, BadgeCheck } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import EditListingModal from "@/components/EditListingModal";
+import RequestVerificationModal from "@/components/RequestVerificationModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SellerReviews from "@/components/SellerReviews";
+import { getAvatarUrl } from "@/lib/avatar";
 // import { getPassDetails, PassType } from "@/components/PassCard"; // COMMENTED OUT - Pass system removed
 // import PassStatus from "@/components/PassStatus"; // COMMENTED OUT - Pass system removed
 import { Link } from "react-router-dom";
@@ -71,6 +73,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -315,7 +318,7 @@ const Profile = () => {
               {/* Avatar */}
               <div className="relative">
                 <img
-                  src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`}
+                  src={getAvatarUrl(profile?.avatar_url, viewingUserId || user?.id || '')}
                   alt={profile?.full_name || 'Profile'}
                   className="w-24 h-24 rounded-2xl object-cover border-4 border-primary/20"
                 />
@@ -345,6 +348,17 @@ const Profile = () => {
                             Edit Profile
                           </Button>
                         </Link>
+                        {!profile?.is_verified && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="gap-2"
+                            onClick={() => setIsVerificationModalOpen(true)}
+                          >
+                            <BadgeCheck className="w-4 h-4" />
+                            Request Verification
+                          </Button>
+                        )}
                         <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2">
                           <LogOut className="w-4 h-4" />
                           Sign Out
@@ -522,7 +536,7 @@ const Profile = () => {
                           image={listing.images?.[0] || "/placeholder.svg"}
                           seller={{
                             name: isOwnProfile ? "you" : profile?.username || "User",
-                            avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${viewingUserId || user?.id}`,
+                            avatar: getAvatarUrl(profile?.avatar_url, viewingUserId || user?.id || ''),
                             verified: profile?.is_verified || false,
                           }}
                           sellerId={viewingUserId || user?.id}
@@ -567,7 +581,7 @@ const Profile = () => {
                                 image={listing.images?.[0] || "/placeholder.svg"}
                                 seller={{
                                   name: "you",
-                                  avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`,
+                                  avatar: getAvatarUrl(profile?.avatar_url, user?.id || ''),
                                   verified: profile?.is_verified || false,
                                 }}
                                 sellerId={user?.id}
@@ -612,7 +626,7 @@ const Profile = () => {
                               image={listing.images?.[0] || "/placeholder.svg"}
                               seller={{
                                 name: "you",
-                                avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`,
+                                avatar: getAvatarUrl(profile?.avatar_url, user?.id || ''),
                                 verified: profile?.is_verified || false,
                               }}
                               sellerId={user?.id}
@@ -650,6 +664,15 @@ const Profile = () => {
           isOpen={isEditModalOpen}
           onClose={handleCloseEditModal}
           onUpdate={handleUpdateListing}
+        />
+      )}
+
+      {/* Verification Request Modal */}
+      {isOwnProfile && user && (
+        <RequestVerificationModal
+          open={isVerificationModalOpen}
+          onOpenChange={setIsVerificationModalOpen}
+          userId={user.id}
         />
       )}
     </div>
