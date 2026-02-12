@@ -1,4 +1,4 @@
-import { Instagram, Twitter, Mail } from "lucide-react";
+import { Instagram, Mail, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
@@ -21,11 +21,13 @@ const Footer = () => {
             <div className="flex gap-2">
               {[
                 { Icon: Instagram, href: "https://www.instagram.com/revastra.me/", label: "Instagram" },
-                { Icon: Twitter, href: "https://x.com/revastra", label: "Twitter" },
+                { Icon: X, href: "https://x.com/revastra", label: "X (Twitter)" },
               ].map(({ Icon, href, label }, i) => (
                 <a
                   key={i}
                   href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
                   className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                 >
@@ -85,7 +87,7 @@ const Footer = () => {
           <div className="flex gap-5">
             <Link to="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Privacy</Link>
             <Link to="/terms" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Terms</Link>
-            <a href="revastraaa@gmail.com" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Support</a>
+            <a href="mailto:revastraaa@gmail.com" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Support</a>
           </div>
         </div>
       </div>

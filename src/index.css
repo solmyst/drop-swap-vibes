@@ -17,6 +17,21 @@
     -ms-user-select: none;
     user-select: none;
     pointer-events: auto;
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Prevent horizontal overflow */
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+  }
+  
+  /* Ensure all containers respect viewport width */
+  .container {
+    max-width: 100%;
+    overflow-x: hidden;
   }
   
   :root {
