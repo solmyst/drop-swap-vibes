@@ -16,15 +16,6 @@
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    pointer-events: auto;
-    max-width: 100%;
-    height: auto;
-  }
-  
-  /* Prevent horizontal overflow on body only */
-  body {
-    overflow-x: hidden;
-    width: 100%;
   }
   
   :root {
