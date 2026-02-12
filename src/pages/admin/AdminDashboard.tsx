@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
-  LayoutDashboard, Users, Package, MessageCircle, Eye
+  LayoutDashboard, Users, Package, MessageCircle, Eye, BadgeCheck
 } from "lucide-react";
 import { useNavigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -81,6 +81,7 @@ const AdminDashboard = () => {
     { path: '/admin', icon: LayoutDashboard, label: 'Overview', exact: true },
     { path: '/admin/listings', icon: Package, label: 'Listings' },
     { path: '/admin/users', icon: Users, label: 'Users' },
+    { path: '/admin/verification', icon: BadgeCheck, label: 'Verification' },
   ];
 
   const isOverview = location.pathname === '/admin';

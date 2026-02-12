@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
-  Search, Shield, ShieldOff, Eye, ChevronLeft, ChevronRight,
-  UserCog, Calendar, Trash2, Ban, UserCheck
+  Search, Shield, Eye, ChevronLeft, ChevronRight,
+  UserCog, Calendar, Trash2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,6 @@ interface User {
   avatar_url: string | null;
   email: string;
   is_verified: boolean | null;
-  is_blocked: boolean | null;
   created_at: string;
   role?: string;
   activePass?: PassType | null;
@@ -171,18 +170,9 @@ const AdminUsers = () => {
   };
 
   const handleToggleBlock = async (user: User) => {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ is_blocked: !user.is_blocked })
-      .eq('user_id', user.user_id);
-
-    if (error) {
-      toast.error('Failed to update block status');
-      return;
-    }
-
-    toast.success(user.is_blocked ? 'User unblocked' : 'User blocked');
-    fetchUsers();
+    // Note: is_blocked column doesn't exist in profiles table
+    // This feature would require adding the column first
+    toast.error('Block feature requires database migration. Contact developer.');
   };
 
   const handleChangeRole = async () => {
@@ -198,7 +188,10 @@ const AdminUsers = () => {
     if (selectedRole !== 'user') {
       const { error } = await supabase
         .from('user_roles')
-        .insert({ user_id: selectedUser.user_id, role: selectedRole });
+        .insert({ 
+          user_id: selectedUser.user_id, 
+          role: selectedRole as 'admin' | 'moderator' | 'user'
+        });
 
       if (error) {
         toast.error('Failed to change role');
@@ -215,33 +208,10 @@ const AdminUsers = () => {
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
 
-    try {
-      const { data, error } = await supabase.rpc('delete_user_and_data', {
-        _user_id: selectedUser.user_id
-      });
-
-      if (error) {
-        console.error('Delete error:', error);
-        
-        // Check if it's a function not found error
-        if (error.message.includes('function') || error.code === '42883') {
-          toast.error('Delete function not set up. Please run fix-user-deletion.sql in Supabase');
-        } else if (error.message.includes('permission')) {
-          toast.error('Permission denied. Make sure you are an admin.');
-        } else {
-          toast.error(`Failed to delete user: ${error.message}`);
-        }
-        return;
-      }
-
-      toast.success('User deleted successfully');
-      setShowDeleteDialog(false);
-      setSelectedUser(null);
-      fetchUsers();
-    } catch (err: any) {
-      console.error('Unexpected error:', err);
-      toast.error(`Error: ${err.message || 'Unknown error'}`);
-    }
+    // Note: delete_user_and_data function doesn't exist in database
+    // This feature requires running fix-user-deletion.sql first
+    toast.error('Delete function not set up. Please run fix-user-deletion.sql in Supabase');
+    return;
   };
 
   const filteredUsers = users.filter(u =>
@@ -324,9 +294,6 @@ const AdminUsers = () => {
                           {user.is_verified && (
                             <Badge variant="secondary" className="text-xs">Verified</Badge>
                           )}
-                          {user.is_blocked && (
-                            <Badge variant="destructive" className="text-xs">Blocked</Badge>
-                          )}
                         </div>
                         <span className="text-sm text-muted-foreground">{user.full_name}</span>
                       </div>
@@ -368,18 +335,6 @@ const AdminUsers = () => {
                         title="View details"
                       >
                         <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleToggleBlock(user)}
-                        title={user.is_blocked ? 'Unblock user' : 'Block user'}
-                      >
-                        {user.is_blocked ? (
-                          <UserCheck className="w-4 h-4 text-green-500" />
-                        ) : (
-                          <Ban className="w-4 h-4 text-amber-500" />
-                        )}
                       </Button>
                       <Button
                         variant="ghost"
@@ -458,9 +413,6 @@ const AdminUsers = () => {
                 <div>
                   <h3 className="font-bold text-lg">{selectedUser.username || 'Unnamed'}</h3>
                   <p className="text-muted-foreground">{selectedUser.full_name}</p>
-                  {selectedUser.is_blocked && (
-                    <Badge variant="destructive" className="mt-1">Blocked</Badge>
-                  )}
                 </div>
               </div>
 
@@ -482,16 +434,6 @@ const AdminUsers = () => {
                   className="w-full sm:w-auto"
                 >
                   {selectedUser.is_verified ? 'Remove Verification' : 'Verify User'}
-                </Button>
-                <Button
-                  variant={selectedUser.is_blocked ? 'default' : 'destructive'}
-                  onClick={() => {
-                    handleToggleBlock(selectedUser);
-                    setSelectedUser(null);
-                  }}
-                  className="w-full sm:w-auto"
-                >
-                  {selectedUser.is_blocked ? 'Unblock User' : 'Block User'}
                 </Button>
               </DialogFooter>
             </div>

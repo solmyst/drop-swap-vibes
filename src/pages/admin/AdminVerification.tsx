@@ -62,6 +62,7 @@ const AdminVerification = () => {
 
         return {
           ...request,
+          status: request.status as 'pending' | 'approved' | 'rejected',
           user: {
             email: profile?.email || 'Unknown',
             username: profile?.username || 'Unknown',
