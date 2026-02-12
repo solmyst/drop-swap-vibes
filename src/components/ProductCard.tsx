@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Heart, MessageCircle, Eye, Verified, Edit2, CheckCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProductCardProps {
   id: number | string;
@@ -51,19 +52,63 @@ const ProductCard = ({
   // Check if current user is the seller
   const isOwner = user?.id === sellerId;
 
+  // Check if item is in wishlist on mount
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('wishlist')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('listing_id', String(id))
+        .maybeSingle()
+        .then(({ data }) => {
+          setIsLiked(!!data);
+        });
+    }
+  }, [user, id]);
+
   const discount = originalPrice
     ? Math.round(((originalPrice - price) / originalPrice) * 100)
     : 0;
 
-  const handleWishlist = (e: React.MouseEvent) => {
+  const handleWishlist = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
       navigate('/auth');
       return;
     }
-    setIsLiked(!isLiked);
-    toast.success(isLiked ? 'Removed from saved' : 'Saved ❤️');
+
+    const newLikedState = !isLiked;
+    setIsLiked(newLikedState);
+
+    if (newLikedState) {
+      // Add to wishlist
+      const { error } = await supabase
+        .from('wishlist')
+        .insert({ user_id: user.id, listing_id: String(id) });
+      
+      if (error) {
+        setIsLiked(false);
+        toast.error('Failed to save');
+        return;
+      }
+      toast.success('Saved ❤️');
+    } else {
+      // Remove from wishlist
+      const { error } = await supabase
+        .from('wishlist')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('listing_id', String(id));
+      
+      if (error) {
+        setIsLiked(true);
+        toast.error('Failed to remove');
+        return;
+      }
+      toast.success('Removed from saved');
+    }
   };
 
   const handleChat = (e: React.MouseEvent) => {
