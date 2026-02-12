@@ -21,17 +21,10 @@
     height: auto;
   }
   
-  /* Prevent horizontal overflow */
-  html, body {
+  /* Prevent horizontal overflow on body only */
+  body {
     overflow-x: hidden;
     width: 100%;
-    position: relative;
-  }
-  
-  /* Ensure all containers respect viewport width */
-  .container {
-    max-width: 100%;
-    overflow-x: hidden;
   }
   
   :root {

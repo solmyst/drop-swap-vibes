@@ -18,12 +18,18 @@ BEGIN
   END IF;
 
   -- Delete in order to avoid foreign key constraints
+  -- Use IF EXISTS to handle tables that might not exist
   
   -- Delete user's wishlist
   DELETE FROM public.wishlist WHERE user_id = _user_id;
   
-  -- Delete user's reviews (both given and received)
-  DELETE FROM public.reviews WHERE reviewer_id = _user_id OR seller_id = _user_id;
+  -- Delete user's reviews (both given and received) - only if table exists
+  BEGIN
+    DELETE FROM public.reviews WHERE reviewer_id = _user_id OR seller_id = _user_id;
+  EXCEPTION
+    WHEN undefined_table THEN
+      RAISE NOTICE 'Reviews table does not exist, skipping';
+  END;
   
   -- Delete messages sent by user
   DELETE FROM public.messages WHERE sender_id = _user_id;
@@ -35,10 +41,20 @@ BEGIN
   DELETE FROM public.listings WHERE seller_id = _user_id;
   
   -- Delete user's passes
-  DELETE FROM public.user_passes WHERE user_id = _user_id;
+  BEGIN
+    DELETE FROM public.user_passes WHERE user_id = _user_id;
+  EXCEPTION
+    WHEN undefined_table THEN
+      RAISE NOTICE 'User passes table does not exist, skipping';
+  END;
   
   -- Delete user's usage records
-  DELETE FROM public.user_usage WHERE user_id = _user_id;
+  BEGIN
+    DELETE FROM public.user_usage WHERE user_id = _user_id;
+  EXCEPTION
+    WHEN undefined_table THEN
+      RAISE NOTICE 'User usage table does not exist, skipping';
+  END;
   
   -- Delete user's roles
   DELETE FROM public.user_roles WHERE user_id = _user_id;
