@@ -5,6 +5,20 @@
 @tailwind utilities;
 
 @layer base {
+  /* Prevent zoom on double-tap for mobile */
+  * {
+    touch-action: manipulation;
+  }
+  
+  /* Prevent image zoom on mobile */
+  img {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: auto;
+  }
+  
   :root {
     /* Warm off-white base inspired by the logo's parchment tone */
     --background: 40 20% 97%;
