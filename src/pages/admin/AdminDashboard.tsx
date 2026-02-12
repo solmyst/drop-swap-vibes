@@ -86,7 +86,7 @@ const AdminDashboard = () => {
   const isOverview = location.pathname === '/admin';
 
   return (
-    <div className="min-h-screen bg-background dark">
+    <div className="min-h-screen bg-background dark" style={{ touchAction: 'pan-y pinch-zoom' }}>
       {/* Admin Header */}
       <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
         <div className="container mx-auto px-4">
@@ -101,7 +101,7 @@ const AdminDashboard = () => {
               </div>
               <span className="font-display font-bold text-xl">
                 <span className="text-gradient">रीवस्त्र</span>
-                Admin <span className="text-gradient">Panel</span>
+                <span className="hidden sm:inline"> Admin <span className="text-gradient">Panel</span></span>
               </span>
             </Link>
             <Link to="/">
@@ -113,7 +113,7 @@ const AdminDashboard = () => {
 
       <div className="flex pt-16">
         {/* Sidebar */}
-        <aside className="fixed left-0 top-16 bottom-0 w-64 border-r border-border/50 glass p-4">
+        <aside className="fixed left-0 top-16 bottom-0 w-64 border-r border-border/50 glass p-4 hidden md:block">
           <nav className="space-y-2">
             {navItems.map((item) => {
               const isActive = item.exact 
@@ -135,7 +135,7 @@ const AdminDashboard = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 ml-64 p-6">
+        <main className="flex-1 md:ml-64 p-4 md:p-6 overflow-x-hidden">
           {isOverview ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}

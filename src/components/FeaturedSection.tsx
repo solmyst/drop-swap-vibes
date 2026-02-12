@@ -112,8 +112,8 @@ const FeaturedSection = () => {
           </Link>
         </div>
 
-        {/* Asymmetric Feed Grid - Pinterest/Instagram style */}
-        <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4">
+        {/* Grid with consistent card heights */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
           {products.map((product, index) => (
             <motion.div
               key={product.id}
@@ -121,7 +121,6 @@ const FeaturedSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.04 }}
-              className="break-inside-avoid"
             >
               <ProductCard
                 id={product.id}
@@ -139,7 +138,6 @@ const FeaturedSection = () => {
                 category={product.category}
                 isFeatured={product.is_featured}
                 isNew={new Date(product.created_at) > new Date(Date.now() - 48 * 60 * 60 * 1000)}
-                variant={index === 0 || index === 5 ? 'hero' : 'default'}
               />
             </motion.div>
           ))}
