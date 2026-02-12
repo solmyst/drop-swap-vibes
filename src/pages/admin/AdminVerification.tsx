@@ -54,17 +54,16 @@ const AdminVerification = () => {
     // Fetch user details for each request
     const requestsWithUsers = await Promise.all(
       (requestsData || []).map(async (request) => {
-        const { data: authUser } = await supabase.auth.admin.getUserById(request.user_id);
         const { data: profile } = await supabase
           .from('profiles')
-          .select('username, avatar_url, full_name')
+          .select('username, avatar_url, full_name, email')
           .eq('user_id', request.user_id)
           .maybeSingle();
 
         return {
           ...request,
           user: {
-            email: authUser?.user?.email || 'Unknown',
+            email: profile?.email || 'Unknown',
             username: profile?.username || 'Unknown',
             avatar_url: profile?.avatar_url || null,
             full_name: profile?.full_name || '',

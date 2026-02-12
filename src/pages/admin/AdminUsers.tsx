@@ -81,16 +81,8 @@ const AdminUsers = () => {
       return;
     }
 
-    // Fetch emails from auth.users
-    const userIds = profiles?.map(p => p.user_id) || [];
-    const emailPromises = userIds.map(async (userId) => {
-      const { data } = await supabase.auth.admin.getUserById(userId);
-      return { userId, email: data?.user?.email || 'N/A' };
-    });
-    const emailResults = await Promise.all(emailPromises);
-    const emailMap = new Map(emailResults.map(e => [e.userId, e.email]));
-
     // Fetch roles for these users
+    const userIds = profiles?.map(p => p.user_id) || [];
     const { data: roles } = await supabase
       .from('user_roles')
       .select('user_id, role')
@@ -120,7 +112,7 @@ const AdminUsers = () => {
 
     const enrichedUsers = (profiles || []).map(profile => ({
       ...profile,
-      email: emailMap.get(profile.user_id) || 'N/A',
+      email: profile.email || 'N/A',
       role: roleMap.get(profile.user_id) || 'user',
       activePass: passMap.get(profile.user_id) || null,
       listingsCount: listingCounts.get(profile.user_id) || 0,

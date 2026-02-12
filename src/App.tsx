@@ -22,6 +22,7 @@ import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminListings from "./pages/admin/AdminListings";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminVerification from "./pages/admin/AdminVerification";
 import AdminPasses from "./pages/admin/AdminPasses";
 import AdminTransactions from "./pages/admin/AdminTransactions";
 
@@ -56,6 +57,7 @@ const App = () => (
             <Route path="/admin" element={<AdminDashboard />}>
               <Route path="listings" element={<AdminListings />} />
               <Route path="users" element={<AdminUsers />} />
+              <Route path="verification" element={<AdminVerification />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
