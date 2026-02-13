@@ -49,8 +49,15 @@ async function checkBrowsePage() {
     });
     const duration = Date.now() - start;
     
-    if (response.ok) {
-      logCheck('Browse Page', true, `Status ${response.status}`, duration);
+    // For SPA on GitHub Pages, 404 with redirect script is expected and OK
+    if (response.ok || response.status === 404) {
+      const text = await response.text();
+      // Check if it's the SPA redirect 404 (contains our redirect script)
+      if (text.includes('Single Page Apps for GitHub Pages') || response.ok) {
+        logCheck('Browse Page', true, `Status ${response.status} (SPA routing)`, duration);
+      } else {
+        logCheck('Browse Page', false, `Status ${response.status}`, duration);
+      }
     } else {
       logCheck('Browse Page', false, `Status ${response.status}`, duration);
     }
@@ -139,10 +146,14 @@ async function checkAPIResponseTime() {
     });
     const duration = Date.now() - start;
     
+    // For SPA on GitHub Pages, 404 with redirect script is expected and OK
+    const text = await response.text();
+    const isSPARedirect = text.includes('Single Page Apps for GitHub Pages');
+    
     if (duration > 5000) {
       logCheck('Response Time', false, 'Too slow', duration);
-    } else if (response.ok) {
-      logCheck('Response Time', true, 'Fast', duration);
+    } else if (response.ok || (response.status === 404 && isSPARedirect)) {
+      logCheck('Response Time', true, 'Fast (SPA routing)', duration);
     } else {
       logCheck('Response Time', false, `Status ${response.status}`, duration);
     }
