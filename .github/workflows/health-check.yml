@@ -1,0 +1,54 @@
+name: Website Health Check
+
+on:
+  schedule:
+    # Run every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          cd scripts
+          npm install @supabase/supabase-js node-fetch
+
+      - name: Run health checks
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: node scripts/health-check.js
+
+      - name: Notify on failure
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.ALERT_EMAIL }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          subject: '🚨 रीवस्त्र Health Check Failed'
+          to: ${{ secrets.ALERT_EMAIL }}
+          from: रीवस्त्र Monitoring <${{ secrets.ALERT_EMAIL }}>
+          body: |
+            Health check failed for revastra.me
+            
+            Time: ${{ github.event.repository.updated_at }}
+            Workflow: ${{ github.workflow }}
+            Run: ${{ github.run_number }}
+            
+            Check details: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            Please investigate immediately!
