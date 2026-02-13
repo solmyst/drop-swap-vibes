@@ -31,26 +31,26 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: node scripts/health-check.js
 
-      Email notifications disabled - check GitHub Actions for health check results
-      To enable: Set ALERT_EMAIL and GMAIL_APP_PASSWORD secrets in GitHub
-      - name: Notify on failure
-        if: failure()
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: revastraaa@gmail.com
-          password: ${{ secrets.GMAIL_APP_PASSWORD }}
-          subject: '🚨 रीवस्त्र Health Check Failed'
-          to: revastraaa@gmail.com
-          from: रीवस्त्र Monitoring <revastraaa@gmail.com>
-          body: |
-            Health check failed for revastra.me
-            
-            Time: ${{ github.event.repository.updated_at }}
-            Workflow: ${{ github.workflow }}
-            Run: ${{ github.run_number }}
-            
-            Check details: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            
-            Please investigate immediately!
+      # Email notifications disabled - check GitHub Actions for health check results
+      # To enable: Set ALERT_EMAIL and GMAIL_APP_PASSWORD secrets in GitHub
+      # - name: Notify on failure
+      #   if: failure()
+      #   uses: dawidd6/action-send-mail@v3
+      #   with:
+      #     server_address: smtp.gmail.com
+      #     server_port: 587
+      #     username: revastraaa@gmail.com
+      #     password: ${{ secrets.GMAIL_APP_PASSWORD }}
+      #     subject: '🚨 रीवस्त्र Health Check Failed'
+      #     to: revastraaa@gmail.com
+      #     from: रीवस्त्र Monitoring <revastraaa@gmail.com>
+      #     body: |
+      #       Health check failed for revastra.me
+      #       
+      #       Time: ${{ github.event.repository.updated_at }}
+      #       Workflow: ${{ github.workflow }}
+      #       Run: ${{ github.run_number }}
+      #       
+      #       Check details: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      #       
+      #       Please investigate immediately!
