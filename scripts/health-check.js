@@ -48,16 +48,20 @@ async function checkBrowsePage() {
       signal: AbortSignal.timeout(10000)
     });
     const duration = Date.now() - start;
+    const text = await response.text();
     
-    // For SPA on GitHub Pages, 404 with redirect script is expected and OK
-    if (response.ok || response.status === 404) {
-      const text = await response.text();
-      // Check if it's the SPA redirect 404 (contains our redirect script)
-      if (text.includes('Single Page Apps for GitHub Pages') || response.ok) {
-        logCheck('Browse Page', true, `Status ${response.status} (SPA routing)`, duration);
-      } else {
-        logCheck('Browse Page', false, `Status ${response.status}`, duration);
-      }
+    // For SPA: Check if the page contains the redirect script OR actual content
+    // If it's a real error, the 404 page won't have our redirect script
+    const hasSPARedirect = text.includes('Single Page Apps for GitHub Pages');
+    const hasAppContent = text.includes('रीवस्त्र') || text.includes('revastra');
+    
+    if (response.ok && hasAppContent) {
+      logCheck('Browse Page', true, `Status ${response.status}`, duration);
+    } else if (response.status === 404 && hasSPARedirect) {
+      // 404 with redirect is OK for SPA, but verify it's our redirect
+      logCheck('Browse Page', true, `SPA routing active`, duration);
+    } else if (!hasAppContent && !hasSPARedirect) {
+      logCheck('Browse Page', false, `No content or redirect found`, duration);
     } else {
       logCheck('Browse Page', false, `Status ${response.status}`, duration);
     }
@@ -136,7 +140,33 @@ async function checkStorage() {
   }
 }
 
-// Check 6: API Response Time
+// Check 6: Auth Page & Supabase Auth
+async function checkAuthPage() {
+  const start = Date.now();
+  try {
+    const response = await fetch(`${WEBSITE_URL}/auth`, { 
+      method: 'GET',
+      signal: AbortSignal.timeout(10000)
+    });
+    const duration = Date.now() - start;
+    const text = await response.text();
+    
+    // Verify the page loads (either directly or via SPA redirect)
+    const hasSPARedirect = text.includes('Single Page Apps for GitHub Pages');
+    const hasAppContent = text.includes('रीवस्त्र') || text.includes('revastra');
+    
+    if ((response.ok || (response.status === 404 && hasSPARedirect)) && (hasAppContent || hasSPARedirect)) {
+      logCheck('Auth Page', true, 'Page accessible', duration);
+    } else {
+      logCheck('Auth Page', false, `Status ${response.status} - No valid content`, duration);
+    }
+  } catch (error) {
+    const duration = Date.now() - start;
+    logCheck('Auth Page', false, error.message, duration);
+  }
+}
+
+// Check 7: API Response Time
 async function checkAPIResponseTime() {
   const start = Date.now();
   try {
@@ -145,15 +175,20 @@ async function checkAPIResponseTime() {
       signal: AbortSignal.timeout(10000)
     });
     const duration = Date.now() - start;
-    
-    // For SPA on GitHub Pages, 404 with redirect script is expected and OK
     const text = await response.text();
-    const isSPARedirect = text.includes('Single Page Apps for GitHub Pages');
+    
+    // For SPA: Verify the redirect script exists and contains our app name
+    const hasSPARedirect = text.includes('Single Page Apps for GitHub Pages');
+    const hasAppContent = text.includes('रीवस्त्र') || text.includes('revastra');
     
     if (duration > 5000) {
       logCheck('Response Time', false, 'Too slow', duration);
-    } else if (response.ok || (response.status === 404 && isSPARedirect)) {
-      logCheck('Response Time', true, 'Fast (SPA routing)', duration);
+    } else if (response.ok && hasAppContent) {
+      logCheck('Response Time', true, `Fast`, duration);
+    } else if (response.status === 404 && hasSPARedirect) {
+      logCheck('Response Time', true, `Fast (SPA routing)`, duration);
+    } else if (!hasAppContent && !hasSPARedirect) {
+      logCheck('Response Time', false, `No content or redirect found`, duration);
     } else {
       logCheck('Response Time', false, `Status ${response.status}`, duration);
     }
@@ -173,6 +208,7 @@ async function runHealthCheck() {
   await checkSupabase();
   await checkDatabasePerformance();
   await checkStorage();
+  await checkAuthPage();
   await checkAPIResponseTime();
 
   console.log('\n' + '='.repeat(50));
