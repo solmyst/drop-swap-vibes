@@ -209,7 +209,7 @@ const AdminUsers = () => {
     if (!selectedUser) return;
 
     try {
-      // Call the delete_user_and_data function
+      // Call the delete_user_and_data function (v2 - updated)
       const { error } = await supabase.rpc('delete_user_and_data', {
         _user_id: selectedUser.user_id
       });
