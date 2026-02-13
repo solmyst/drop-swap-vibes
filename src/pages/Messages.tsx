@@ -409,32 +409,37 @@ const Messages = () => {
     
     const messageContent = newMessage.trim();
     const tempId = `temp-${Date.now()}`;
+    const imageToUpload = selectedImage; // Store reference before clearing
+    
+    // Clear UI immediately for better UX
+    setNewMessage("");
+    const tempImagePreview = imagePreview;
+    cancelImage(); // Clear image preview immediately
     
     // Optimistic update - add message immediately to UI
     const optimisticMessage: Message = {
       id: tempId,
       content: messageContent || '',
-      image_url: null,
+      image_url: tempImagePreview, // Show preview temporarily
       sender_id: user.id,
       created_at: new Date().toISOString(),
       is_read: false,
     };
     
     setMessages(prev => [...prev, optimisticMessage]);
-    setNewMessage(""); // Clear input immediately
     
     let imageUrl: string | null = null;
 
     // Upload image if selected
-    if (selectedImage) {
+    if (imageToUpload) {
       setUploadingImage(true);
       try {
-        const fileExt = selectedImage.name.split('.').pop();
+        const fileExt = imageToUpload.name.split('.').pop();
         const fileName = `${user.id}/${selectedConvo.id}/${Date.now()}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
           .from('chat-images')
-          .upload(fileName, selectedImage);
+          .upload(fileName, imageToUpload);
 
         if (uploadError) {
           console.error('Image upload error:', uploadError);
@@ -454,7 +459,8 @@ const Messages = () => {
         // Remove optimistic message on error
         setMessages(prev => prev.filter(m => m.id !== tempId));
         setNewMessage(messageContent); // Restore message
-        cancelImage();
+        setSelectedImage(imageToUpload); // Restore image
+        setImagePreview(tempImagePreview); // Restore preview
         return;
       }
       setUploadingImage(false);
@@ -501,8 +507,6 @@ const Messages = () => {
       .from('conversations')
       .update({ last_message_at: now })
       .eq('id', selectedConvo.id);
-
-    cancelImage();
   };
 
   const formatTime = (dateStr: string) => {

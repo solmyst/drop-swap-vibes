@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Edit2, MapPin, Calendar, Star, Package, Heart, MessageCircle, Verified, Share2, LogOut, BadgeCheck } from "lucide-react";
+import { Edit2, MapPin, Calendar, Star, Package, Heart, MessageCircle, Verified, Share2, LogOut } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -331,7 +331,7 @@ const Profile = () => {
 
               {/* Profile Info */}
               <div className="flex-1">
-                <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+                <div className="flex flex-col gap-4 mb-4">
                   <div>
                     <h1 className="font-display text-2xl md:text-3xl font-bold">
                       {profile?.full_name || 'Anonymous User'}
@@ -339,16 +339,17 @@ const Profile = () => {
                     <p className="text-muted-foreground">@{profile?.username || 'user'}</p>
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row flex-wrap gap-2">
                     {isOwnProfile && (
                       <>
                         <Link to="/edit-profile">
-                          <Button variant="outline" size="sm" className="gap-2">
+                          <Button variant="outline" size="sm" className="gap-2 w-full sm:w-auto">
                             <Edit2 className="w-4 h-4" />
                             Edit Profile
                           </Button>
                         </Link>
-                        {!profile?.is_verified && (
+                        {/* COMMENTED OUT - Verification system temporarily disabled */}
+                        {/* {!profile?.is_verified && (
                           <Button 
                             variant="outline" 
                             size="sm" 
@@ -358,14 +359,14 @@ const Profile = () => {
                             <BadgeCheck className="w-4 h-4" />
                             Request Verification
                           </Button>
-                        )}
-                        <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2">
+                        )} */}
+                        <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2 w-full sm:w-auto">
                           <LogOut className="w-4 h-4" />
                           Sign Out
                         </Button>
                       </>
                     )}
-                    <Button variant="outline" size="sm" className="gap-2" onClick={handleShare}>
+                    <Button variant="outline" size="sm" className="gap-2 w-full sm:w-auto" onClick={handleShare}>
                       <Share2 className="w-4 h-4" />
                       Share
                     </Button>

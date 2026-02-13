@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Eye, Verified, Edit2, CheckCircle } from "lucide-react";
+import { Heart, MessageCircle, Verified, Edit2, CheckCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -142,6 +142,8 @@ const ProductCard = ({
             src={image}
             alt={title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+            style={{ maxWidth: '100%', height: 'auto', objectFit: 'cover' }}
           />
           
           {/* Gradient overlay */}
