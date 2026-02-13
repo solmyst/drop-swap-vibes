@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd scripts
-          npm install @supabase/supabase-js node-fetch
+          npm install @supabase/supabase-js
 
       - name: Run health checks
         env:

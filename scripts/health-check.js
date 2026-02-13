@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import fetch from 'node-fetch';
 
 const WEBSITE_URL = 'https://revastra.me';
 const supabase = createClient(
@@ -25,7 +24,7 @@ async function checkWebsite() {
   try {
     const response = await fetch(WEBSITE_URL, { 
       method: 'GET',
-      timeout: 10000 
+      signal: AbortSignal.timeout(10000)
     });
     const duration = Date.now() - start;
     
@@ -40,24 +39,24 @@ async function checkWebsite() {
   }
 }
 
-// Check 2: Auth Page
-async function checkAuthPage() {
+// Check 2: Browse Page
+async function checkBrowsePage() {
   const start = Date.now();
   try {
-    const response = await fetch(`${WEBSITE_URL}/auth`, { 
+    const response = await fetch(`${WEBSITE_URL}/browse`, { 
       method: 'GET',
-      timeout: 10000 
+      signal: AbortSignal.timeout(10000)
     });
     const duration = Date.now() - start;
     
     if (response.ok) {
-      logCheck('Auth Page', true, `Status ${response.status}`, duration);
+      logCheck('Browse Page', true, `Status ${response.status}`, duration);
     } else {
-      logCheck('Auth Page', false, `Status ${response.status}`, duration);
+      logCheck('Browse Page', false, `Status ${response.status}`, duration);
     }
   } catch (error) {
     const duration = Date.now() - start;
-    logCheck('Auth Page', false, error.message, duration);
+    logCheck('Browse Page', false, error.message, duration);
   }
 }
 
@@ -134,9 +133,9 @@ async function checkStorage() {
 async function checkAPIResponseTime() {
   const start = Date.now();
   try {
-    const response = await fetch(`${WEBSITE_URL}/browse`, { 
+    const response = await fetch(`${WEBSITE_URL}/store`, { 
       method: 'GET',
-      timeout: 10000 
+      signal: AbortSignal.timeout(10000)
     });
     const duration = Date.now() - start;
     
@@ -159,7 +158,7 @@ async function runHealthCheck() {
   console.log(`Time: ${new Date().toISOString()}\n`);
 
   await checkWebsite();
-  await checkAuthPage();
+  await checkBrowsePage();
   await checkSupabase();
   await checkDatabasePerformance();
   await checkStorage();
