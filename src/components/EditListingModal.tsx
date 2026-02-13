@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Upload, Trash2, Save, Plus, Image as ImageIcon } from 'lucide-react';
+import { X, Trash2, Save, Plus, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -319,10 +319,23 @@ const EditListingModal = ({ listing, isOpen, onClose, onUpdate }: EditListingMod
             <Input
               id="price"
               type="number"
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-              placeholder="0"
+              value={formData.price || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Only allow positive integers
+                if (value === '' || /^\d+$/.test(value)) {
+                  setFormData({ ...formData, price: value === '' ? 0 : parseInt(value, 10) });
+                }
+              }}
+              onBlur={(e) => {
+                // Ensure minimum value of 1 on blur
+                if (!e.target.value || parseInt(e.target.value) < 1) {
+                  setFormData({ ...formData, price: 1 });
+                }
+              }}
+              placeholder="Enter price"
               min="1"
+              step="1"
               required
             />
           </div>

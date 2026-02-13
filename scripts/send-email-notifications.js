@@ -55,7 +55,7 @@ function getFirstReminderEmail(recipientName, senderName, messagePreview) {
   };
 }
 
-// Email template for second reminder (14 hours)
+// Email template for second reminder (24 hours)
 function getSecondReminderEmail(recipientName, senderName, messagePreview) {
   return {
     subject: `⏰ Final reminder: Message from ${senderName} on रीवस्त्र`,
@@ -86,7 +86,7 @@ function getSecondReminderEmail(recipientName, senderName, messagePreview) {
               <div class="urgent">
                 <strong>⚠️ This is your final reminder!</strong>
               </div>
-              <p><strong>${senderName}</strong> is still waiting for your response. Their message from 14 hours ago:</p>
+              <p><strong>${senderName}</strong> is still waiting for your response. Their message from 24 hours ago:</p>
               <div class="message-preview">
                 <p><em>"${messagePreview}"</em></p>
               </div>
