@@ -437,6 +437,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_user_and_data: { Args: { _user_id: string }; Returns: void }
       get_user_chat_limit: { Args: { user_id_param: string }; Returns: number }
       get_user_listing_limit: {
         Args: { user_id_param: string }

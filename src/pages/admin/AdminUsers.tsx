@@ -208,10 +208,26 @@ const AdminUsers = () => {
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
 
-    // Note: delete_user_and_data function doesn't exist in database
-    // This feature requires running fix-user-deletion.sql first
-    toast.error('Delete function not set up. Please run fix-user-deletion.sql in Supabase');
-    return;
+    try {
+      // Call the delete_user_and_data function
+      const { error } = await supabase.rpc('delete_user_and_data', {
+        _user_id: selectedUser.user_id
+      });
+
+      if (error) {
+        console.error('Delete error:', error);
+        toast.error(`Failed to delete user: ${error.message}`);
+        return;
+      }
+
+      toast.success('User deleted successfully');
+      setShowDeleteDialog(false);
+      setSelectedUser(null);
+      fetchUsers();
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete user');
+    }
   };
 
   const filteredUsers = users.filter(u =>
